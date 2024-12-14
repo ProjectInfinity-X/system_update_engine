@@ -17,6 +17,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
+#include <future>
 #include <iterator>
 #include <memory>
 
@@ -53,6 +54,7 @@ DEFINE_string(partitions,
               "",
               "Comma separated list of partitions to extract, leave empty for "
               "extracting all partitions");
+DEFINE_bool(single_thread, false, "Limit extraction to a single thread");
 
 using chromeos_update_engine::DeltaArchiveManifest;
 using chromeos_update_engine::PayloadMetadata;
@@ -93,6 +95,103 @@ void WriteVerity(const PartitionUpdate& partition,
   return;
 }
 
+bool ExtractImageFromPartition(const DeltaArchiveManifest& manifest,
+                               const PartitionUpdate& partition,
+                               const size_t data_begin,
+                               int payload_fd,
+                               std::string_view input_dir,
+                               std::string_view output_dir) {
+  InstallOperationExecutor executor(manifest.block_size());
+  const base::FilePath output_dir_path(
+      base::StringPiece(output_dir.data(), output_dir.size()));
+  const base::FilePath input_dir_path(
+      base::StringPiece(input_dir.data(), input_dir.size()));
+  std::vector<unsigned char> blob;
+
+  LOG(INFO) << "Extracting partition " << partition.partition_name()
+            << " size: " << partition.new_partition_info().size();
+  const auto output_path =
+      output_dir_path.Append(partition.partition_name() + ".img").value();
+  auto out_fd =
+      std::make_shared<chromeos_update_engine::EintrSafeFileDescriptor>();
+  TEST_AND_RETURN_FALSE_ERRNO(
+      out_fd->Open(output_path.c_str(), O_RDWR | O_CREAT, 0644));
+  auto in_fd =
+      std::make_shared<chromeos_update_engine::EintrSafeFileDescriptor>();
+  if (partition.has_old_partition_info()) {
+    const auto input_path =
+        input_dir_path.Append(partition.partition_name() + ".img").value();
+    LOG(INFO) << "Incremental OTA detected for partition "
+              << partition.partition_name() << " opening source image "
+              << input_path;
+    CHECK(in_fd->Open(input_path.c_str(), O_RDONLY))
+        << " failed to open " << input_path;
+  }
+
+  for (const auto& op : partition.operations()) {
+    if (op.has_src_sha256_hash()) {
+      brillo::Blob actual_hash;
+      TEST_AND_RETURN_FALSE(fd_utils::ReadAndHashExtents(
+          in_fd, op.src_extents(), manifest.block_size(), &actual_hash));
+      CHECK_EQ(HexEncode(ToStringView(actual_hash)),
+               HexEncode(op.src_sha256_hash()))
+          << ", failed partition: " << partition.partition_name();
+    }
+
+    blob.resize(op.data_length());
+    const auto op_data_offset = data_begin + op.data_offset();
+    ssize_t bytes_read = 0;
+    TEST_AND_RETURN_FALSE(utils::PReadAll(
+        payload_fd, blob.data(), blob.size(), op_data_offset, &bytes_read));
+    if (op.has_data_sha256_hash()) {
+      brillo::Blob actual_hash;
+      TEST_AND_RETURN_FALSE(HashCalculator::RawHashOfData(blob, &actual_hash));
+      CHECK_EQ(HexEncode(ToStringView(actual_hash)),
+               HexEncode(op.data_sha256_hash()))
+          << ", failed partition: " << partition.partition_name();
+    }
+    auto direct_writer = std::make_unique<DirectExtentWriter>(out_fd);
+    if (op.type() == InstallOperation::ZERO) {
+      TEST_AND_RETURN_FALSE(
+          executor.ExecuteZeroOrDiscardOperation(op, std::move(direct_writer)));
+    } else if (op.type() == InstallOperation::REPLACE ||
+               op.type() == InstallOperation::REPLACE_BZ ||
+               op.type() == InstallOperation::REPLACE_XZ) {
+      TEST_AND_RETURN_FALSE(executor.ExecuteReplaceOperation(
+          op, std::move(direct_writer), blob.data()));
+    } else if (op.type() == InstallOperation::SOURCE_COPY) {
+      CHECK(in_fd->IsOpen())
+          << ", failed partition: " << partition.partition_name();
+      TEST_AND_RETURN_FALSE(executor.ExecuteSourceCopyOperation(
+          op, std::move(direct_writer), in_fd));
+    } else {
+      CHECK(in_fd->IsOpen())
+          << ", failed partition: " << partition.partition_name();
+      TEST_AND_RETURN_FALSE(executor.ExecuteDiffOperation(
+          op, std::move(direct_writer), in_fd, blob.data(), blob.size()));
+    }
+  }
+  WriteVerity(partition, out_fd, manifest.block_size());
+  int err =
+      truncate64(output_path.c_str(), partition.new_partition_info().size());
+  if (err) {
+    PLOG(ERROR) << "Failed to truncate " << output_path << " to "
+                << partition.new_partition_info().size();
+  }
+  brillo::Blob actual_hash;
+  TEST_AND_RETURN_FALSE(
+      HashCalculator::RawHashOfFile(output_path, &actual_hash));
+  CHECK_EQ(HexEncode(ToStringView(actual_hash)),
+           HexEncode(partition.new_partition_info().hash()))
+      << " Partition " << partition.partition_name()
+      << " hash mismatches. Either the source image or OTA package is "
+         "corrupted.";
+
+  LOG(INFO) << "Extracted partition " << partition.partition_name();
+
+  return true;
+}
+
 bool ExtractImagesFromOTA(const DeltaArchiveManifest& manifest,
                           const PayloadMetadata& metadata,
                           int payload_fd,
@@ -100,97 +199,46 @@ bool ExtractImagesFromOTA(const DeltaArchiveManifest& manifest,
                           std::string_view input_dir,
                           std::string_view output_dir,
                           const std::set<std::string>& partitions) {
-  InstallOperationExecutor executor(manifest.block_size());
   const size_t data_begin = metadata.GetMetadataSize() +
                             metadata.GetMetadataSignatureSize() +
                             payload_offset;
-  const base::FilePath output_dir_path(
-      base::StringPiece(output_dir.data(), output_dir.size()));
-  const base::FilePath input_dir_path(
-      base::StringPiece(input_dir.data(), input_dir.size()));
-  std::vector<unsigned char> blob;
-  for (const auto& partition : manifest.partitions()) {
-    if (!partitions.empty() &&
-        partitions.count(partition.partition_name()) == 0) {
-      continue;
-    }
-    LOG(INFO) << "Extracting partition " << partition.partition_name()
-              << " size: " << partition.new_partition_info().size();
-    const auto output_path =
-        output_dir_path.Append(partition.partition_name() + ".img").value();
-    auto out_fd =
-        std::make_shared<chromeos_update_engine::EintrSafeFileDescriptor>();
-    TEST_AND_RETURN_FALSE_ERRNO(
-        out_fd->Open(output_path.c_str(), O_RDWR | O_CREAT, 0644));
-    auto in_fd =
-        std::make_shared<chromeos_update_engine::EintrSafeFileDescriptor>();
-    if (partition.has_old_partition_info()) {
-      const auto input_path =
-          input_dir_path.Append(partition.partition_name() + ".img").value();
-      LOG(INFO) << "Incremental OTA detected for partition "
-                << partition.partition_name() << " opening source image "
-                << input_path;
-      CHECK(in_fd->Open(input_path.c_str(), O_RDONLY))
-          << " failed to open " << input_path;
-    }
+  bool ret = true;
 
-    for (const auto& op : partition.operations()) {
-      if (op.has_src_sha256_hash()) {
-        brillo::Blob actual_hash;
-        TEST_AND_RETURN_FALSE(fd_utils::ReadAndHashExtents(
-            in_fd, op.src_extents(), manifest.block_size(), &actual_hash));
-        CHECK_EQ(HexEncode(ToStringView(actual_hash)),
-                 HexEncode(op.src_sha256_hash()));
-      }
-
-      blob.resize(op.data_length());
-      const auto op_data_offset = data_begin + op.data_offset();
-      ssize_t bytes_read = 0;
-      TEST_AND_RETURN_FALSE(utils::PReadAll(
-          payload_fd, blob.data(), blob.size(), op_data_offset, &bytes_read));
-      if (op.has_data_sha256_hash()) {
-        brillo::Blob actual_hash;
-        TEST_AND_RETURN_FALSE(
-            HashCalculator::RawHashOfData(blob, &actual_hash));
-        CHECK_EQ(HexEncode(ToStringView(actual_hash)),
-                 HexEncode(op.data_sha256_hash()));
-      }
-      auto direct_writer = std::make_unique<DirectExtentWriter>(out_fd);
-      if (op.type() == InstallOperation::ZERO) {
-        TEST_AND_RETURN_FALSE(executor.ExecuteZeroOrDiscardOperation(
-            op, std::move(direct_writer)));
-      } else if (op.type() == InstallOperation::REPLACE ||
-                 op.type() == InstallOperation::REPLACE_BZ ||
-                 op.type() == InstallOperation::REPLACE_XZ) {
-        TEST_AND_RETURN_FALSE(executor.ExecuteReplaceOperation(
-            op, std::move(direct_writer), blob.data()));
-      } else if (op.type() == InstallOperation::SOURCE_COPY) {
-        CHECK(in_fd->IsOpen());
-        TEST_AND_RETURN_FALSE(executor.ExecuteSourceCopyOperation(
-            op, std::move(direct_writer), in_fd));
-      } else {
-        CHECK(in_fd->IsOpen());
-        TEST_AND_RETURN_FALSE(executor.ExecuteDiffOperation(
-            op, std::move(direct_writer), in_fd, blob.data(), blob.size()));
+  if (FLAGS_single_thread) {
+    for (const auto& partition : manifest.partitions()) {
+      if (!ExtractImageFromPartition(manifest,
+                                     partition,
+                                     data_begin,
+                                     payload_fd,
+                                     input_dir,
+                                     output_dir)) {
+        ret = false;
+        LOG(ERROR) << "Extraction of partition " << partition.partition_name()
+                   << " failed";
+        break;
       }
     }
-    WriteVerity(partition, out_fd, manifest.block_size());
-    int err =
-        truncate64(output_path.c_str(), partition.new_partition_info().size());
-    if (err) {
-      PLOG(ERROR) << "Failed to truncate " << output_path << " to "
-                  << partition.new_partition_info().size();
+  } else {
+    std::vector<std::pair<std::future<bool>, std::string>> futures;
+    for (const auto& partition : manifest.partitions()) {
+      futures.push_back(std::make_pair(std::async(std::launch::async,
+                                                  ExtractImageFromPartition,
+                                                  manifest,
+                                                  partition,
+                                                  data_begin,
+                                                  payload_fd,
+                                                  input_dir,
+                                                  output_dir),
+                                       partition.partition_name()));
     }
-    brillo::Blob actual_hash;
-    TEST_AND_RETURN_FALSE(
-        HashCalculator::RawHashOfFile(output_path, &actual_hash));
-    CHECK_EQ(HexEncode(ToStringView(actual_hash)),
-             HexEncode(partition.new_partition_info().hash()))
-        << " Partition " << partition.partition_name()
-        << " hash mismatches. Either the source image or OTA package is "
-           "corrupted.";
+    for (auto& future : futures) {
+      if (!future.first.get()) {
+        ret = false;
+        LOG(ERROR) << "Extraction of partition " << future.second << " failed";
+      }
+    }
   }
-  return true;
+  return ret;
 }
 
 }  // namespace chromeos_update_engine

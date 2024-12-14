@@ -548,6 +548,8 @@ TYPED_TEST(HttpFetcherTest, ExtraHeadersInRequestTest) {
   fetcher->SetHeader("User-Agent", "MyTest");
   fetcher->SetHeader("user-agent", "Override that header");
   fetcher->SetHeader("Authorization", "Basic user:passwd");
+  fetcher->SetHeader("Cache-Control", "testControl");
+  fetcher->SetHeader("Connection", "testConnection");
 
   // Invalid headers.
   fetcher->SetHeader("X-Foo", "Invalid\nHeader\nIgnored");
@@ -571,6 +573,8 @@ TYPED_TEST(HttpFetcherTest, ExtraHeadersInRequestTest) {
             delegate.data.find("user-agent: Override that header\r\n"));
   EXPECT_NE(string::npos,
             delegate.data.find("Authorization: Basic user:passwd\r\n"));
+  EXPECT_NE(string::npos, delegate.data.find("Cache-Control: testControl\r\n"));
+  EXPECT_NE(string::npos, delegate.data.find("Connection: testConnection\r\n"));
 
   EXPECT_EQ(string::npos, delegate.data.find("\nAccept:"));
   EXPECT_EQ(string::npos, delegate.data.find("X-Foo: Invalid"));

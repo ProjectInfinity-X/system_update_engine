@@ -273,7 +273,7 @@ void FilesystemVerifierAction::WriteVerityAndHashPartition(
     return;
   }
   const auto read_size =
-      std::min<size_t>(buffer_size, end_offset - start_offset);
+      std::min<uint64_t>(buffer_size, end_offset - start_offset);
   const auto bytes_read = fd->Read(buffer, read_size);
   if (bytes_read < 0 || static_cast<size_t>(bytes_read) != read_size) {
     PLOG(ERROR) << "Failed to read offset " << start_offset << " expected "
@@ -319,7 +319,7 @@ void FilesystemVerifierAction::HashPartition(const off64_t start_offset,
     return;
   }
   const auto read_size =
-      std::min<size_t>(buffer_size, end_offset - start_offset);
+      std::min<uint64_t>(buffer_size, end_offset - start_offset);
   const auto bytes_read = fd->Read(buffer, read_size);
   if (bytes_read < 0 || static_cast<size_t>(bytes_read) != read_size) {
     PLOG(ERROR) << "Failed to read offset " << start_offset << " expected "
@@ -406,7 +406,6 @@ void FilesystemVerifierAction::StartPartitionHashing() {
   buffer_.resize(kReadFileBufferSize);
   hasher_ = std::make_unique<HashCalculator>();
 
-  offset_ = 0;
   filesystem_data_end_ = partition_size_;
   if (partition.fec_offset > 0) {
     CHECK_LE(partition.hash_tree_offset, partition.fec_offset)
@@ -456,7 +455,7 @@ const std::string& FilesystemVerifierAction::GetPartitionPath() const {
   }
 }
 
-size_t FilesystemVerifierAction::GetPartitionSize() const {
+uint64_t FilesystemVerifierAction::GetPartitionSize() const {
   const InstallPlan::Partition& partition =
       install_plan_.partitions[partition_index_];
   switch (verifier_step_) {

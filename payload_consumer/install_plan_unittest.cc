@@ -54,7 +54,6 @@ hash_checks_mandatory: false
 powerwash_required: false
 switch_slot_on_reboot: true
 run_post_install: true
-is_rollback: false
 rollback_data_save_requested: false
 write_verity: true
 Partition: foo-partition_name

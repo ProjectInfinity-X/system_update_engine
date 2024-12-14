@@ -109,9 +109,16 @@ FileDescriptorPtr VerifiedSourceFd::ChooseSourceFD(
   brillo::Blob source_hash;
   brillo::Blob expected_source_hash(operation.src_sha256_hash().begin(),
                                     operation.src_sha256_hash().end());
-  if (fd_utils::ReadAndHashExtents(
-          source_fd_, operation.src_extents(), block_size_, &source_hash) &&
-      source_hash == expected_source_hash) {
+  if (!fd_utils::ReadAndHashExtents(
+          source_fd_, operation.src_extents(), block_size_, &source_hash)) {
+    LOG(ERROR) << "Failed to compute hash for operation " << operation.type()
+               << " data offset: " << operation.data_offset();
+    if (error) {
+      *error = ErrorCode::kDownloadOperationHashVerificationError;
+    }
+    return nullptr;
+  }
+  if (source_hash == expected_source_hash) {
     return source_fd_;
   }
   if (error) {

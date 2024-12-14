@@ -301,6 +301,8 @@ bool UpdateAttempterAndroid::ApplyPayload(
   install_plan_.is_resume = !payload_id.empty() &&
                             DeltaPerformer::CanResumeUpdate(prefs_, payload_id);
   if (!install_plan_.is_resume) {
+    LOG(INFO) << "Starting a new update " << payload_url
+              << " size: " << payload_size << " offset: " << payload_offset;
     boot_control_->GetDynamicPartitionControl()->Cleanup();
     boot_control_->GetDynamicPartitionControl()->ResetUpdate(prefs_);
 
@@ -381,11 +383,26 @@ bool UpdateAttempterAndroid::ApplyPayload(
 #endif  // _UE_SIDELOAD
   }
   // Setup extra headers.
-  if (!headers[kPayloadPropertyAuthorization].empty())
+  if (!headers[kPayloadPropertyAuthorization].empty()) {
     fetcher->SetHeader("Authorization", headers[kPayloadPropertyAuthorization]);
-  if (!headers[kPayloadPropertyUserAgent].empty())
+  }
+  if (!headers[kPayloadPropertyUserAgent].empty()) {
     fetcher->SetHeader("User-Agent", headers[kPayloadPropertyUserAgent]);
-
+  }
+  if (!headers[kPayloadPropertyHTTPExtras].empty()) {
+    auto entries =
+        android::base::Split(headers[kPayloadPropertyHTTPExtras], " ");
+    for (auto& entry : entries) {
+      auto parts = android::base::Split(entry, ";");
+      if (parts.size() != 2) {
+        LOG(ERROR)
+            << "HTTP headers are not in expected format. "
+               "headers[kPayloadPropertyHTTPExtras] = key1;val1 key2;val2";
+        continue;
+      }
+      fetcher->SetHeader(parts[0], parts[1]);
+    }
+  }
   if (!headers[kPayloadPropertyNetworkProxy].empty()) {
     LOG(INFO) << "Using proxy url from payload headers: "
               << headers[kPayloadPropertyNetworkProxy];
@@ -867,6 +884,9 @@ void UpdateAttempterAndroid::TerminateUpdateAndNotify(ErrorCode error_code) {
 
   boot_control_->GetDynamicPartitionControl()->Cleanup();
 
+  for (auto observer : daemon_state_->service_observers())
+    observer->SendPayloadApplicationComplete(error_code);
+
   download_progress_ = 0;
   UpdateStatus new_status =
       (error_code == ErrorCode::kSuccess ? UpdateStatus::UPDATED_NEED_REBOOT
@@ -879,9 +899,6 @@ void UpdateAttempterAndroid::TerminateUpdateAndNotify(ErrorCode error_code) {
   if (!network_selector_->SetProcessNetwork(kDefaultNetworkId)) {
     LOG(WARNING) << "Unable to unbind network.";
   }
-
-  for (auto observer : daemon_state_->service_observers())
-    observer->SendPayloadApplicationComplete(error_code);
 
   CollectAndReportUpdateMetricsOnUpdateFinished(error_code);
   ClearMetricsPrefs();

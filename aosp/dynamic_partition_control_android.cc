@@ -199,7 +199,7 @@ bool DynamicPartitionControlAndroid::MapPartitionInternal(
   };
   bool success = false;
   if (GetVirtualAbFeatureFlag().IsEnabled() && target_supports_snapshot_ &&
-      force_writable && ExpectMetadataMounted()) {
+      slot != source_slot_ && force_writable && ExpectMetadataMounted()) {
     // Only target partitions are mapped with force_writable. On Virtual
     // A/B devices, target partitions may overlap with source partitions, so
     // they must be mapped with snapshot.
@@ -317,6 +317,7 @@ bool DynamicPartitionControlAndroid::UnmapAllPartitions() {
 
 void DynamicPartitionControlAndroid::Cleanup() {
   UnmapAllPartitions();
+  LOG(INFO) << "UnmapAllPartitions done";
   metadata_device_.reset();
   if (GetVirtualAbFeatureFlag().IsEnabled()) {
     snapshot_ = SnapshotManager::New();
@@ -324,6 +325,7 @@ void DynamicPartitionControlAndroid::Cleanup() {
     snapshot_ = SnapshotManagerStub::New();
   }
   CHECK(snapshot_ != nullptr) << "Cannot initialize SnapshotManager.";
+  LOG(INFO) << "SnapshotManager initialized.";
 }
 
 bool DynamicPartitionControlAndroid::DeviceExists(const std::string& path) {
@@ -1245,7 +1247,7 @@ DynamicPartitionControlAndroid::GetDynamicPartitionDevice(
     }
   }
 
-  bool force_writable = (slot != current_slot) && !not_in_payload;
+  const bool force_writable = !not_in_payload;
   if (MapPartitionOnDeviceMapper(
           super_device, partition_name_suffix, slot, force_writable, device)) {
     return DynamicPartitionDeviceStatus::SUCCESS;

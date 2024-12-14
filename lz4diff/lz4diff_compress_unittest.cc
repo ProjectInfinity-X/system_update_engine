@@ -14,10 +14,10 @@
 // limitations under the License.
 //
 
+#include <fcntl.h>
 #include <unistd.h>
 
 #include <algorithm>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -48,10 +48,10 @@ static void ExtractErofsImage(const char* erofs_image,
                               const char* inode_path,
                               Blob* output) {
   struct erofs_sb_info sbi {};
-  auto err = dev_open_ro(&sbi, erofs_image);
+  auto err = erofs_dev_open(&sbi, erofs_image, O_RDONLY);
   ASSERT_EQ(err, 0);
   DEFER {
-    dev_close(&sbi);
+    erofs_dev_close(&sbi);
   };
 
   err = erofs_read_superblock(&sbi);

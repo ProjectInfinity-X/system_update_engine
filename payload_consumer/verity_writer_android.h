@@ -63,8 +63,8 @@ class IncrementalEncodeFEC {
   brillo::Blob fec_;
   brillo::Blob fec_read_;
   EncodeFECStep current_step_;
-  size_t current_round_;
-  size_t num_rounds_;
+  uint64_t current_round_;
+  uint64_t num_rounds_;
   FileDescriptor* read_fd_;
   FileDescriptor* write_fd_;
   uint64_t data_offset_;
@@ -73,7 +73,7 @@ class IncrementalEncodeFEC {
   uint64_t fec_size_;
   uint64_t fec_roots_;
   uint64_t block_size_;
-  size_t rs_n_;
+  uint64_t rs_n_;
   bool verify_mode_;
   std::unique_ptr<void, decltype(&free_rs_char)> rs_char_;
   UnownedCachedFileDescriptor cache_fd_;

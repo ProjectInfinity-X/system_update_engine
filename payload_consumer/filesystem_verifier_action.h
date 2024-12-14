@@ -109,7 +109,7 @@ class FilesystemVerifierAction : public InstallPlanAction {
 
   bool IsVABC(const InstallPlan::Partition& partition) const;
 
-  size_t GetPartitionSize() const;
+  uint64_t GetPartitionSize() const;
 
   // When the read is done, finalize the hash checking of the current partition
   // and continue checking the next one.
@@ -162,9 +162,6 @@ class FilesystemVerifierAction : public InstallPlanAction {
   // update_engine is expected to write, and may be smaller than the size of the
   // partition in gpt.
   uint64_t partition_size_{0};
-
-  // The byte offset that we are reading in the current partition.
-  uint64_t offset_{0};
 
   // The end offset of filesystem data, first byte position of hashtree.
   uint64_t filesystem_data_end_{0};

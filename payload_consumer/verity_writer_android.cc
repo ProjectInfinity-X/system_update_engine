@@ -78,7 +78,7 @@ bool IncrementalEncodeFEC::Compute(FileDescriptor* _read_fd,
     // Encodes |block_size| number of rs blocks each round so that we can read
     // one block each time instead of 1 byte to increase random read
     // performance. This uses about 1 MiB memory for 4K block size.
-    for (size_t j = 0; j < rs_n_; j++) {
+    for (uint64_t j = 0; j < rs_n_; j++) {
       uint64_t offset = fec_ecc_interleave(
           current_round_ * rs_n_ * block_size_ + j, rs_n_, num_rounds_);
       // Don't read past |data_size|, treat them as 0.
@@ -95,11 +95,11 @@ bool IncrementalEncodeFEC::Compute(FileDescriptor* _read_fd,
         TEST_AND_RETURN_FALSE(static_cast<size_t>(bytes_read) ==
                               buffer_.size());
       }
-      for (size_t k = 0; k < buffer_.size(); k++) {
+      for (uint64_t k = 0; k < buffer_.size(); k++) {
         rs_blocks_[k * rs_n_ + j] = buffer_[k];
       }
     }
-    for (size_t j = 0; j < block_size_; j++) {
+    for (uint64_t j = 0; j < block_size_; j++) {
       // Encode [j * rs_n_ : (j + 1) * rs_n_) in |rs_blocks| and write
       // |fec_roots| number of parity bytes to |j * fec_roots| in |fec|.
       encode_rs_char(rs_char_.get(),

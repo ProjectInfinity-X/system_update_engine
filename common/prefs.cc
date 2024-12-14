@@ -200,7 +200,12 @@ bool Prefs::FileStorage::CreateTemporaryPrefs() {
     return false;
   }
   // Copy the directory.
-  std::filesystem::copy(source_directory, destination_directory);
+  std::error_code e;
+  std::filesystem::copy(source_directory, destination_directory, e);
+  if (e) {
+    LOG(ERROR) << "failed to copy prefs to prefs_tmp: " << e.message();
+    return false;
+  }
 
   return true;
 }
@@ -209,7 +214,12 @@ bool Prefs::FileStorage::DeleteTemporaryPrefs() {
   std::filesystem::path destination_directory(GetTemporaryDir());
 
   if (std::filesystem::exists(destination_directory)) {
-    return std::filesystem::remove_all(destination_directory);
+    std::error_code e;
+    std::filesystem::remove_all(destination_directory, e);
+    if (e) {
+      LOG(ERROR) << "failed to remove directory: " << e.message();
+      return false;
+    }
   }
   return true;
 }
