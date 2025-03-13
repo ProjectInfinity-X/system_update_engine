@@ -41,8 +41,7 @@
 
 #include <base/files/file_util.h>
 #include <base/format_macros.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <base/threading/simple_thread.h>
 #include <brillo/data_encoding.h>
 #include <bsdiff/bsdiff.h>
@@ -677,9 +676,12 @@ bool DeltaReadPartition(vector<AnnotatedOperation>* aops,
 
   size_t max_threads = GetMaxThreads();
 
-  if (config.max_threads > 0) {
+  if (config.max_threads > 0 && config.max_threads < max_threads) {
     max_threads = config.max_threads;
   }
+  LOG(INFO) << "Using " << max_threads << " threads to process "
+            << file_delta_processors.size() << " files on partition "
+            << old_part.name;
 
   // Sort the files in descending order based on number of new blocks to make
   // sure we start the largest ones first.
@@ -907,7 +909,7 @@ bool DeltaReadFile(std::vector<AnnotatedOperation>* aops,
     }
 
     if (static_cast<uint64_t>(chunk_blocks) < total_blocks) {
-      aop.name = base::StringPrintf(
+      aop.name = android::base::StringPrintf(
           "%s:%" PRIu64, name.c_str(), block_offset / chunk_blocks);
     }
 
@@ -1208,9 +1210,9 @@ bool IsExtFilesystem(const string& device) {
   return true;
 }
 
-// Return the number of CPUs on the machine, and 4 threads in minimum.
+// Return the number of CPUs on the machine, and 1 threads in minimum.
 size_t GetMaxThreads() {
-  return std::max(sysconf(_SC_NPROCESSORS_ONLN), 4L);
+  return std::max(sysconf(_SC_NPROCESSORS_ONLN), 1L);
 }
 
 }  // namespace diff_utils

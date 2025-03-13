@@ -206,6 +206,10 @@ bool ExtractImagesFromOTA(const DeltaArchiveManifest& manifest,
 
   if (FLAGS_single_thread) {
     for (const auto& partition : manifest.partitions()) {
+      if (!partitions.empty() &&
+          partitions.count(partition.partition_name()) == 0) {
+        continue;
+      }
       if (!ExtractImageFromPartition(manifest,
                                      partition,
                                      data_begin,
@@ -221,6 +225,10 @@ bool ExtractImagesFromOTA(const DeltaArchiveManifest& manifest,
   } else {
     std::vector<std::pair<std::future<bool>, std::string>> futures;
     for (const auto& partition : manifest.partitions()) {
+      if (!partitions.empty() &&
+          partitions.count(partition.partition_name()) == 0) {
+        continue;
+      }
       futures.push_back(std::make_pair(std::async(std::launch::async,
                                                   ExtractImageFromPartition,
                                                   manifest,

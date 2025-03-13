@@ -18,12 +18,13 @@
 
 #include <inttypes.h>
 
+#include <set>
 #include <string>
 #include <vector>
 
 #include <base/logging.h>
 #include <base/macros.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 
 #include "update_engine/payload_consumer/payload_constants.h"
 #include "update_engine/payload_generator/extent_ranges.h"
@@ -89,9 +90,10 @@ template <typename Container>
 string ExtentsToStringTemplate(const Container& extents) {
   string ext_str;
   for (const Extent& e : extents)
-    ext_str += base::StringPrintf("[%" PRIu64 ", %" PRIu64 "] ",
-                                  static_cast<uint64_t>(e.start_block()),
-                                  static_cast<uint64_t>(e.num_blocks()));
+    ext_str +=
+        android::base::StringPrintf("[%" PRIu64 ", %" PRIu64 "] ",
+                                    static_cast<uint64_t>(e.start_block()),
+                                    static_cast<uint64_t>(e.num_blocks()));
   return ext_str;
 }
 

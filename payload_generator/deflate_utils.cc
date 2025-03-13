@@ -22,7 +22,6 @@
 
 #include <base/files/file_util.h>
 #include <base/logging.h>
-#include <base/strings/string_util.h>
 
 #include "update_engine/common/utils.h"
 #include "update_engine/payload_generator/delta_diff_generator.h"
@@ -66,7 +65,7 @@ bool CopyExtentsToFile(const string& in_path,
 bool IsSquashfsImage(const string& part_path,
                      const FilesystemInterface::File& file) {
   // Only check for files with img postfix.
-  if (base::EndsWith(file.name, ".img", base::CompareCase::SENSITIVE) &&
+  if (android::base::EndsWith(file.name, ".img") &&
       utils::BlocksInExtents(file.extents) >=
           kMinimumSquashfsImageSize / kBlockSize) {
     brillo::Blob super_block;
@@ -132,9 +131,7 @@ bool IsFileExtensions(
   return any_of(extensions.begin(),
                 extensions.end(),
                 [name = ToStringPiece(name)](const auto& ext) {
-                  return base::EndsWith(name,
-                                        ToStringPiece(ext),
-                                        base::CompareCase::INSENSITIVE_ASCII);
+                  return android::base::EndsWith(ToLower(name), ToLower(ext));
                 });
 }
 

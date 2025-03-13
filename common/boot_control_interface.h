@@ -23,7 +23,7 @@
 #include <vector>
 
 #include <base/callback.h>
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/common/dynamic_partition_control_interface.h"
 #include "update_engine/update_metadata.pb.h"

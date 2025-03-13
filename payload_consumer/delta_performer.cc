@@ -33,7 +33,7 @@
 #include <base/format_macros.h>
 #include <base/metrics/histogram_macros.h>
 #include <base/strings/string_number_conversions.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <base/time/time.h>
 #include <brillo/data_encoding.h>
 #include <bsdiff/bspatch.h>
@@ -89,7 +89,7 @@ void DeltaPerformer::LogProgress(const char* message_prefix) {
   if (num_total_operations_) {
     total_operations_str = std::to_string(num_total_operations_);
     // Upcasting to 64-bit to avoid overflow, back to size_t for formatting.
-    completed_percentage_str = base::StringPrintf(
+    completed_percentage_str = android::base::StringPrintf(
         " (%" PRIu64 "%%)",
         IntRatio(next_operation_num_, num_total_operations_, 100));
   }
@@ -101,7 +101,7 @@ void DeltaPerformer::LogProgress(const char* message_prefix) {
   if (payload_size) {
     payload_size_str = std::to_string(payload_size);
     // Upcasting to 64-bit to avoid overflow, back to size_t for formatting.
-    downloaded_percentage_str = base::StringPrintf(
+    downloaded_percentage_str = android::base::StringPrintf(
         " (%" PRIu64 "%%)", IntRatio(total_bytes_received_, payload_size, 100));
   }
 
@@ -1001,7 +1001,8 @@ bool DeltaPerformer::ExtentsToBsdiffPositionsString(
     uint64_t this_length =
         min(full_length - length,
             static_cast<uint64_t>(extent.num_blocks()) * block_size);
-    ret += base::StringPrintf("%" PRIi64 ":%" PRIu64 ",", start, this_length);
+    ret += android::base::StringPrintf(
+        "%" PRIi64 ":%" PRIu64 ",", start, this_length);
     length += this_length;
   }
   TEST_AND_RETURN_FALSE(length == full_length);

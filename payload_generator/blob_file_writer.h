@@ -17,7 +17,7 @@
 #ifndef UPDATE_ENGINE_PAYLOAD_GENERATOR_BLOB_FILE_WRITER_H_
 #define UPDATE_ENGINE_PAYLOAD_GENERATOR_BLOB_FILE_WRITER_H_
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include <base/synchronization/lock.h>
 #include <brillo/secure_blob.h>

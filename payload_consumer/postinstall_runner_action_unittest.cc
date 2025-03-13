@@ -29,8 +29,7 @@
 #if BASE_VER < 780000  // Android
 #include <base/message_loop/message_loop.h>
 #endif  // BASE_VER < 780000
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #if BASE_VER >= 780000  // CrOS
 #include <base/task/single_thread_task_executor.h>
 #endif  // BASE_VER >= 780000
@@ -116,7 +115,7 @@ class PostinstallRunnerActionTest : public ::testing::Test {
 
   void SuspendRunningAction() {
     if (!postinstall_action_ || !postinstall_action_->current_command_ ||
-        test_utils::Readlink(base::StringPrintf(
+        test_utils::Readlink(android::base::StringPrintf(
             "/proc/%d/fd/0", postinstall_action_->current_command_)) !=
             "/dev/zero") {
       // We need to wait for the postinstall command to start and flag that it
@@ -199,7 +198,6 @@ void PostinstallRunnerActionTest::RunPostinstallAction(
   install_plan.partitions = {part};
   install_plan.download_url = "http://127.0.0.1:8080/update";
   install_plan.powerwash_required = powerwash_required;
-  install_plan.rollback_data_save_requested = save_rollback_data;
   RunPostinstallActionWithInstallPlan(install_plan);
 }
 

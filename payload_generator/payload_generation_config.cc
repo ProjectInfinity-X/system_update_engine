@@ -22,7 +22,6 @@
 
 #include <android-base/parseint.h>
 #include <base/logging.h>
-#include <base/strings/string_number_conversions.h>
 #include <brillo/strings/string_utils.h>
 #include <libsnapshot/cow_format.h>
 
@@ -176,7 +175,7 @@ bool ImageConfig::LoadDynamicPartitionMetadata(
     }
 
     uint64_t max_size{};
-    if (!base::StringToUint64(buf, &max_size)) {
+    if (!android::base::ParseUint<uint64_t>(buf, &max_size)) {
       LOG(ERROR) << "Group size for " << group_name << " = " << buf
                  << " is not an integer.";
       return false;

@@ -16,6 +16,7 @@
 
 #include "update_engine/payload_generator/payload_generation_config.h"
 
+#include <android-base/parseint.h>
 #include <base/logging.h>
 #include <base/strings/string_number_conversions.h>
 #include <base/strings/string_split.h>
@@ -187,13 +188,13 @@ bool ImageConfig::LoadVerityConfig() {
               base::StringToSizeT(verity_table[4], &hash_block_size));
           TEST_AND_RETURN_FALSE(block_size == hash_block_size);
           uint64_t num_data_blocks = 0;
-          TEST_AND_RETURN_FALSE(
-              base::StringToUint64(verity_table[5], &num_data_blocks));
+          TEST_AND_RETURN_FALSE(android::base::ParseUint<uint64_t>(
+              verity_table[5], &num_data_blocks));
           part.verity.hash_tree_data_extent =
               ExtentForRange(0, num_data_blocks);
           uint64_t hash_start_block = 0;
-          TEST_AND_RETURN_FALSE(
-              base::StringToUint64(verity_table[6], &hash_start_block));
+          TEST_AND_RETURN_FALSE(android::base::ParseUint<uint64_t>(
+              verity_table[6], &hash_start_block));
           part.verity.hash_tree_algorithm = verity_table[7];
           TEST_AND_RETURN_FALSE(base::HexStringToBytes(
               verity_table[9], &part.verity.hash_tree_salt));

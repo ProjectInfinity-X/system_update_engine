@@ -19,7 +19,6 @@
 
 #include <stdint.h>
 
-#include <string>
 #include <vector>
 
 #include <utils/Errors.h>
@@ -33,7 +32,7 @@
 
 namespace chromeos_update_engine {
 
-class BinderUpdateEngineAndroidStableService
+class BinderUpdateEngineAndroidStableService final
     : public android::os::BnUpdateEngineStable,
       public ServiceObserverInterface {
  public:
@@ -62,6 +61,8 @@ class BinderUpdateEngineAndroidStableService
   android::binder::Status unbind(
       const android::sp<android::os::IUpdateEngineStableCallback>& callback,
       bool* return_value) override;
+  android::binder::Status triggerPostinstall(
+      const ::android::String16& partition) override;
 
  private:
   // Remove the passed |callback| from the list of registered callbacks. Called

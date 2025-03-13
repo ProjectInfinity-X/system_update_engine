@@ -17,7 +17,7 @@
 #ifndef UPDATE_ENGINE_COMMON_NETWORK_SELECTOR_STUB_H_
 #define UPDATE_ENGINE_COMMON_NETWORK_SELECTOR_STUB_H_
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/common/network_selector_interface.h"
 

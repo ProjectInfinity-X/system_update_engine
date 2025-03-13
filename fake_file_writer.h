@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <brillo/secure_blob.h>
 
 #include "update_engine/payload_consumer/file_writer.h"

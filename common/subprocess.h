@@ -27,7 +27,7 @@
 #include <base/callback.h>
 #include <base/files/file_descriptor_watcher_posix.h>
 #include <base/logging.h>
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <brillo/asynchronous_signal_handler_interface.h>
 #include <brillo/message_loops/message_loop.h>
 #ifdef __CHROMEOS__

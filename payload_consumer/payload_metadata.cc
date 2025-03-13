@@ -18,7 +18,7 @@
 
 #include <endian.h>
 
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <brillo/data_encoding.h>
 
 #include "update_engine/common/constants.h"
@@ -62,17 +62,17 @@ MetadataParseResult PayloadMetadata::ParsePayloadHeader(
   // Validate the magic string.
   if (memcmp(payload, kDeltaMagic, sizeof(kDeltaMagic)) != 0) {
     LOG(ERROR) << "Bad payload format -- invalid delta magic: "
-               << base::StringPrintf("%02x%02x%02x%02x",
-                                     payload[0],
-                                     payload[1],
-                                     payload[2],
-                                     payload[3])
+               << android::base::StringPrintf("%02x%02x%02x%02x",
+                                              payload[0],
+                                              payload[1],
+                                              payload[2],
+                                              payload[3])
                << " Expected: "
-               << base::StringPrintf("%02x%02x%02x%02x",
-                                     kDeltaMagic[0],
-                                     kDeltaMagic[1],
-                                     kDeltaMagic[2],
-                                     kDeltaMagic[3]);
+               << android::base::StringPrintf("%02x%02x%02x%02x",
+                                              kDeltaMagic[0],
+                                              kDeltaMagic[1],
+                                              kDeltaMagic[2],
+                                              kDeltaMagic[3]);
     *error = ErrorCode::kDownloadInvalidMetadataMagicString;
     return MetadataParseResult::kError;
   }

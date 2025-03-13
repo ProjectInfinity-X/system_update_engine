@@ -22,7 +22,7 @@
 #include <utility>
 
 #include <base/logging.h>
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <brillo/streams/stream.h>
 
 #include "update_engine/common/http_fetcher.h"

@@ -107,15 +107,13 @@ class FakeHardware : public HardwareInterface {
 
   int GetPowerwashCount() const override { return powerwash_count_; }
 
-  bool SchedulePowerwash(bool save_rollback_data) override {
+  bool SchedulePowerwash() override {
     powerwash_scheduled_ = true;
-    save_rollback_data_ = save_rollback_data;
     return true;
   }
 
   bool CancelPowerwash() override {
     powerwash_scheduled_ = false;
-    save_rollback_data_ = false;
     return true;
   }
 

@@ -24,8 +24,7 @@
 #include <memory>
 
 #include <base/format_macros.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <base/synchronization/lock.h>
 #include <base/threading/simple_thread.h>
 #include <brillo/secure_blob.h>
@@ -164,7 +163,7 @@ bool FullUpdateGenerator::GenerateOperations(
     // Preset all the static information about the operations. The
     // ChunkProcessor will set the rest.
     AnnotatedOperation* aop = aops->data() + i;
-    aop->name = base::StringPrintf(
+    aop->name = android::base::StringPrintf(
         "<%s-operation-%" PRIuS ">", new_part.name.c_str(), i);
     Extent* dst_extent = aop->op.add_dst_extents();
     dst_extent->set_start_block(start_block);

@@ -22,7 +22,6 @@
 #include <vector>
 
 #include <base/json/json_writer.h>
-#include <base/strings/string_util.h>
 #include <base/values.h>
 #include <brillo/data_encoding.h>
 
@@ -118,7 +117,7 @@ bool PayloadProperties::LoadFromPayload() {
       base64_signatures.push_back(
           brillo::data_encoding::Base64Encode(sig.data()));
     }
-    metadata_signatures_ = base::JoinString(base64_signatures, ":");
+    metadata_signatures_ = android::base::Join(base64_signatures, ":");
   }
 
   is_delta_ = std::any_of(manifest.partitions().begin(),

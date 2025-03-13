@@ -23,7 +23,7 @@
 
 #include <base/files/scoped_file.h>
 #include <base/format_macros.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <bsdiff/patch_writer.h>
 #include <gtest/gtest.h>
 #include <puffin/common.h>
@@ -95,7 +95,7 @@ bool InitializePartitionWithUniqueBlocks(const PartitionConfig& part,
   size_t num_blocks = part.size / block_size;
   brillo::Blob file_data(part.size);
   for (size_t i = 0; i < num_blocks; ++i) {
-    string prefix = base::StringPrintf(
+    string prefix = android::base::StringPrintf(
         "block tag 0x%.16" PRIx64 ", block number %16" PRIuS " ", tag, i);
     brillo::Blob block_data(prefix.begin(), prefix.end());
     TEST_AND_RETURN_FALSE(prefix.size() <= block_size);
@@ -531,7 +531,8 @@ TEST_F(DeltaDiffUtilsTest, IdenticalBlocksAreCopiedFromSource) {
 
   ASSERT_EQ(expected_op_extents.size(), aops_.size());
   for (size_t i = 0; i < aops_.size() && i < expected_op_extents.size(); ++i) {
-    SCOPED_TRACE(base::StringPrintf("Failed on operation number %" PRIuS, i));
+    SCOPED_TRACE(
+        android::base::StringPrintf("Failed on operation number %" PRIuS, i));
     const AnnotatedOperation& aop = aops_[i];
     ASSERT_EQ(InstallOperation::SOURCE_COPY, aop.op.type());
     ASSERT_EQ(1, aop.op.src_extents_size());
@@ -628,7 +629,8 @@ TEST_F(DeltaDiffUtilsTest, ZeroBlocksUseReplaceBz) {
 
   ASSERT_EQ(expected_op_extents.size(), aops_.size());
   for (size_t i = 0; i < aops_.size() && i < expected_op_extents.size(); ++i) {
-    SCOPED_TRACE(base::StringPrintf("Failed on operation number %" PRIuS, i));
+    SCOPED_TRACE(
+        android::base::StringPrintf("Failed on operation number %" PRIuS, i));
     const AnnotatedOperation& aop = aops_[i];
     ASSERT_EQ(InstallOperation::REPLACE_BZ, aop.op.type());
     ASSERT_EQ(0, aop.op.src_extents_size());

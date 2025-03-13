@@ -20,7 +20,7 @@
 #include <set>
 #include <vector>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/common/utils.h"
 #include "update_engine/payload_generator/extent_utils.h"

@@ -175,7 +175,7 @@ class ActionTraits<ObjectFeederAction<T>> {
 // This is a simple Action class for testing. It feeds an object into
 // another action.
 template <typename T>
-class ObjectFeederAction : public Action<ObjectFeederAction<T>> {
+class ObjectFeederAction final : public Action<ObjectFeederAction<T>> {
  public:
   typedef NoneType InputObjectType;
   typedef T OutputObjectType;

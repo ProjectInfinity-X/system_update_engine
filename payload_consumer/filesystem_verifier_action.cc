@@ -31,7 +31,6 @@
 #include <utility>
 
 #include <base/bind.h>
-#include <base/strings/string_util.h>
 #include <brillo/data_encoding.h>
 #include <brillo/message_loops/message_loop.h>
 #include <brillo/secure_blob.h>
@@ -112,7 +111,7 @@ void FilesystemVerifierAction::PerformAction() {
   std::partial_sum(partition_weight_.begin(),
                    partition_weight_.end(),
                    partition_weight_.begin(),
-                   std::plus<size_t>());
+                   std::plus<uint64_t>());
 
   install_plan_.Dump();
   // If we are not writing verity, just map all partitions once at the
@@ -357,8 +356,8 @@ void FilesystemVerifierAction::StartPartitionHashing() {
   if (partition_index_ == install_plan_.partitions.size()) {
     if (!install_plan_.untouched_dynamic_partitions.empty()) {
       LOG(INFO) << "Verifying extents of untouched dynamic partitions ["
-                << base::JoinString(install_plan_.untouched_dynamic_partitions,
-                                    ", ")
+                << android::base::Join(
+                       install_plan_.untouched_dynamic_partitions, ", ")
                 << "]";
       if (!dynamic_control_->VerifyExtentsForUntouchedPartitions(
               install_plan_.source_slot,

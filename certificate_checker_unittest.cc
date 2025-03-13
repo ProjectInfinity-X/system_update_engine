@@ -18,8 +18,7 @@
 
 #include <string>
 
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -46,10 +45,10 @@ class MockCertificateCheckObserver : public CertificateChecker::Observer {
 class CertificateCheckerTest : public testing::Test {
  protected:
   void SetUp() override {
-    cert_key_ = base::StringPrintf("%s-%d-%d",
-                                   cert_key_prefix_.c_str(),
-                                   static_cast<int>(server_to_check_),
-                                   depth_);
+    cert_key_ = android::base::StringPrintf("%s-%d-%d",
+                                            cert_key_prefix_.c_str(),
+                                            static_cast<int>(server_to_check_),
+                                            depth_);
     cert_checker.Init();
     cert_checker.SetObserver(&observer_);
   }

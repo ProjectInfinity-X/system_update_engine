@@ -32,8 +32,7 @@
 #include <android-base/unique_fd.h>
 #include <base/files/dir_reader_posix.h>
 #include <base/logging.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <log/log.h>
 
 #include "android/log.h"
@@ -93,9 +92,10 @@ void DeleteOldLogs(const string& kLogsRoot) {
 string SetupLogFile(const string& kLogsRoot) {
   DeleteOldLogs(kLogsRoot);
 
-  return base::StringPrintf("%s/update_engine.%s",
-                            kLogsRoot.c_str(),
-                            utils::GetTimeAsString(::time(nullptr)).c_str());
+  return android::base::StringPrintf(
+      "%s/update_engine.%s",
+      kLogsRoot.c_str(),
+      utils::GetTimeAsString(::time(nullptr)).c_str());
 }
 
 const char* LogPriorityToCString(int priority) {

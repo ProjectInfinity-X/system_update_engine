@@ -19,7 +19,6 @@ cc_library {
 	static_libs: [
 		"liburing",
 	],
-	include_dirs: ["bionic/libc/kernel"],
 	export_include_dirs: [
 		"include",
 	],

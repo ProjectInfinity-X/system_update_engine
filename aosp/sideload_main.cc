@@ -21,7 +21,7 @@
 
 #include <base/command_line.h>
 #include <base/strings/string_split.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <brillo/asynchronous_signal_handler.h>
 #include <brillo/flag_helper.h>
 #include <brillo/message_loops/base_message_loop.h>
@@ -73,12 +73,12 @@ class SideloadDaemonState : public DaemonStateInterface,
                               status == UpdateStatus::FINALIZING)) {
       // Split the progress bar in two parts for the two stages DOWNLOADING and
       // FINALIZING.
-      ReportStatus(base::StringPrintf(
+      ReportStatus(android::base::StringPrintf(
           "ui_print Step %d/2", status == UpdateStatus::DOWNLOADING ? 1 : 2));
-      ReportStatus(base::StringPrintf("progress 0.5 0"));
+      ReportStatus(android::base::StringPrintf("progress 0.5 0"));
     }
     if (status_ != status || fabs(progress - progress_) > 0.005) {
-      ReportStatus(base::StringPrintf("set_progress %.lf", progress));
+      ReportStatus(android::base::StringPrintf("set_progress %.lf", progress));
     }
     progress_ = progress;
     status_ = status;
@@ -86,10 +86,10 @@ class SideloadDaemonState : public DaemonStateInterface,
 
   void SendPayloadApplicationComplete(ErrorCode error_code) override {
     if (error_code != ErrorCode::kSuccess) {
-      ReportStatus(
-          base::StringPrintf("ui_print Error applying update: %d (%s)",
-                             error_code,
-                             utils::ErrorCodeToString(error_code).c_str()));
+      ReportStatus(android::base::StringPrintf(
+          "ui_print Error applying update: %d (%s)",
+          error_code,
+          utils::ErrorCodeToString(error_code).c_str()));
     }
     error_code_ = error_code;
     brillo::MessageLoop::current()->BreakLoop();

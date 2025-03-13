@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/payload_generator/blob_file_writer.h"
 #include "update_engine/payload_generator/operations_generator.h"

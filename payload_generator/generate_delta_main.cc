@@ -26,7 +26,6 @@
 #include <base/logging.h>
 #include <base/strings/string_number_conversions.h>
 #include <base/strings/string_split.h>
-#include <base/strings/string_util.h>
 #include <brillo/key_value_store.h>
 #include <brillo/message_loops/base_message_loop.h>
 #include <unistd.h>
@@ -280,7 +279,7 @@ string ToString(const map<Key, Val>& map) {
   for (const auto& it : map) {
     result.emplace_back(it.first + ": " + it.second);
   }
-  return "{" + base::JoinString(result, ",") + "}";
+  return "{" + android::base::Join(result, ",") + "}";
 }
 
 bool ParsePerPartitionTimestamps(const string& partition_timestamps,
@@ -764,7 +763,9 @@ int Main(int argc, char** argv) {
 
   payload_config.security_patch_level = FLAGS_security_patch_level;
 
-  payload_config.max_threads = FLAGS_max_threads;
+  if (FLAGS_max_threads > 0) {
+    payload_config.max_threads = FLAGS_max_threads;
+  }
 
   if (!FLAGS_partition_timestamps.empty()) {
     CHECK(ParsePerPartitionTimestamps(FLAGS_partition_timestamps,

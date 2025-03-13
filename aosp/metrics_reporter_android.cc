@@ -19,12 +19,11 @@
 #include <stdint.h>
 
 #include <algorithm>
-#include <any>
 #include <memory>
 #include <string>
 
 #include <android-base/properties.h>
-#include <base/strings/string_util.h>
+#include <android-base/strings.h>
 #include <fs_mgr.h>
 #include <libdm/dm.h>
 #include <liblp/builder.h>
@@ -34,12 +33,12 @@
 #include "update_engine/common/constants.h"
 #include "update_engine/payload_consumer/install_plan.h"
 
+using android::base::EndsWith;
 using android::fs_mgr::GetPartitionGroupName;
 using android::fs_mgr::LpMetadata;
 using android::fs_mgr::MetadataBuilder;
 using android::fs_mgr::ReadMetadata;
 using android::fs_mgr::SlotNumberForSlotSuffix;
-using base::EndsWith;
 
 namespace {
 // A number offset adds on top of the enum value. e.g. ErrorCode::SUCCESS will
@@ -104,9 +103,7 @@ void MetricsReporterAndroid::ReportUpdateAttemptMetrics(
       super_partition_size_bytes = GetTotalSuperPartitionSize(*metadata);
 
       for (const auto& group : metadata->groups) {
-        if (EndsWith(GetPartitionGroupName(group),
-                     fs_mgr_get_slot_suffix(),
-                     base::CompareCase::SENSITIVE)) {
+        if (EndsWith(GetPartitionGroupName(group), fs_mgr_get_slot_suffix())) {
           slot_size_bytes += group.maximum_size;
         }
       }

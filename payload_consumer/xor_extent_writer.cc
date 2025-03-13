@@ -28,7 +28,7 @@ namespace chromeos_update_engine {
 bool XORExtentWriter::WriteXorCowOp(const uint8_t* bytes,
                                     const size_t size,
                                     const Extent& xor_ext,
-                                    const size_t src_offset) {
+                                    const uint64_t src_offset) {
   xor_block_data.resize(BlockSize() * xor_ext.num_blocks());
   const auto src_block = src_offset / BlockSize();
   ssize_t bytes_read = 0;

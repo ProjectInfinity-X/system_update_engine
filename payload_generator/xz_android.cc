@@ -18,10 +18,10 @@
 
 #include <algorithm>
 
+#include <android-base/logging.h>
 #include <7zCrc.h>
 #include <Xz.h>
 #include <XzEnc.h>
-#include <base/logging.h>
 
 namespace {
 

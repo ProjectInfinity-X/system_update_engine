@@ -24,9 +24,8 @@
 
 #include <base/files/file_util.h>
 #include <base/files/scoped_temp_dir.h>
-#include <base/macros.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/macros.h>
+#include <android-base/stringprintf.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -282,18 +281,18 @@ TEST_F(PrefsTest, GetInt64BadValue) {
 }
 
 TEST_F(PrefsTest, GetInt64Max) {
-  ASSERT_TRUE(SetValue(
-      kKey,
-      base::StringPrintf("%" PRIi64, std::numeric_limits<int64_t>::max())));
+  ASSERT_TRUE(SetValue(kKey,
+                       android::base::StringPrintf(
+                           "%" PRIi64, std::numeric_limits<int64_t>::max())));
   int64_t value;
   EXPECT_TRUE(prefs_.GetInt64(kKey, &value));
   EXPECT_EQ(std::numeric_limits<int64_t>::max(), value);
 }
 
 TEST_F(PrefsTest, GetInt64Min) {
-  ASSERT_TRUE(SetValue(
-      kKey,
-      base::StringPrintf("%" PRIi64, std::numeric_limits<int64_t>::min())));
+  ASSERT_TRUE(SetValue(kKey,
+                       android::base::StringPrintf(
+                           "%" PRIi64, std::numeric_limits<int64_t>::min())));
   int64_t value;
   EXPECT_TRUE(prefs_.GetInt64(kKey, &value));
   EXPECT_EQ(std::numeric_limits<int64_t>::min(), value);
@@ -328,7 +327,8 @@ TEST_F(PrefsTest, SetInt64Max) {
   EXPECT_TRUE(prefs_.SetInt64(kKey, std::numeric_limits<int64_t>::max()));
   string value;
   EXPECT_TRUE(base::ReadFileToString(prefs_dir_.Append(kKey), &value));
-  EXPECT_EQ(base::StringPrintf("%" PRIi64, std::numeric_limits<int64_t>::max()),
+  EXPECT_EQ(android::base::StringPrintf("%" PRIi64,
+                                        std::numeric_limits<int64_t>::max()),
             value);
 }
 
@@ -336,7 +336,8 @@ TEST_F(PrefsTest, SetInt64Min) {
   EXPECT_TRUE(prefs_.SetInt64(kKey, std::numeric_limits<int64_t>::min()));
   string value;
   EXPECT_TRUE(base::ReadFileToString(prefs_dir_.Append(kKey), &value));
-  EXPECT_EQ(base::StringPrintf("%" PRIi64, std::numeric_limits<int64_t>::min()),
+  EXPECT_EQ(android::base::StringPrintf("%" PRIi64,
+                                        std::numeric_limits<int64_t>::min()),
             value);
 }
 

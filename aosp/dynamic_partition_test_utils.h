@@ -23,14 +23,13 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <vector>
 
-#include <base/strings/string_util.h>
 #include <fs_mgr.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <liblp/builder.h>
 #include <storage_literals/storage_literals.h>
+#include <android-base/strings.h>
 
 #include "update_engine/common/boot_control_interface.h"
 #include "update_engine/update_metadata.pb.h"
@@ -148,9 +147,7 @@ inline DeltaArchiveManifest PartitionSuffixSizesToManifest(
   }
   for (const auto& pair : partition_sizes) {
     for (size_t suffix_idx = 0; suffix_idx < kMaxNumSlots; ++suffix_idx) {
-      if (base::EndsWith(pair.first,
-                         kSlotSuffixes[suffix_idx],
-                         base::CompareCase::SENSITIVE)) {
+      if (android::base::EndsWith(pair.first, kSlotSuffixes[suffix_idx])) {
         AddPartition(
             &manifest,
             manifest.mutable_dynamic_partition_metadata()->mutable_groups(

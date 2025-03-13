@@ -16,7 +16,6 @@
 #include "update_engine/update_status_utils.h"
 
 #include <base/logging.h>
-#include <base/strings/string_number_conversions.h>
 #include <brillo/key_value_store.h>
 
 using brillo::KeyValueStore;
@@ -98,10 +97,9 @@ string UpdateEngineStatusToString(const UpdateEngineStatus& status) {
   KeyValueStore key_value_store;
 
   key_value_store.SetString(kLastCheckedTime,
-                            base::NumberToString(status.last_checked_time));
-  key_value_store.SetString(kProgress, base::NumberToString(status.progress));
-  key_value_store.SetString(kNewSize,
-                            base::NumberToString(status.new_size_bytes));
+                            std::format("{}", status.last_checked_time));
+  key_value_store.SetString(kProgress, std::format("{}", status.progress));
+  key_value_store.SetString(kNewSize, std::format("{}", status.new_size_bytes));
   key_value_store.SetString(kCurrentOp, UpdateStatusToString(status.status));
   key_value_store.SetString(kNewVersion, status.new_version);
   key_value_store.SetBoolean(kIsEnterpriseRollback,

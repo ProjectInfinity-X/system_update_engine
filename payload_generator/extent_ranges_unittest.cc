@@ -18,11 +18,10 @@
 
 #include <vector>
 
-#include <base/stl_util.h>
 #include <gtest/gtest.h>
 
-#include "update_engine/payload_generator/extent_utils.h"
 #include "update_engine/payload_consumer/payload_constants.h"
+#include "update_engine/payload_generator/extent_utils.h"
 
 using std::vector;
 using chromeos_update_engine::operator==;
@@ -53,7 +52,7 @@ void ExpectRangeEq(const ExtentRanges& ranges,
 }
 
 #define ASSERT_RANGE_EQ(ranges, var) \
-  ASSERT_NO_FATAL_FAILURE(ExpectRangeEq(ranges, var, base::size(var), __LINE__))
+  ASSERT_NO_FATAL_FAILURE(ExpectRangeEq(ranges, var, std::size(var), __LINE__))
 
 void ExpectRangesOverlapOrTouch(uint64_t a_start,
                                 uint64_t a_num,

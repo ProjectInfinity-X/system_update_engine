@@ -16,8 +16,6 @@
 
 #include "update_engine/common/error_code_utils.h"
 
-#include <base/strings/string_number_conversions.h>
-
 using std::string;
 
 namespace chromeos_update_engine {
@@ -185,7 +183,7 @@ string ErrorCodeToString(ErrorCode code) {
       // error codes which should be added here.
   }
 
-  return "Unknown error: " + base::NumberToString(static_cast<unsigned>(code));
+  return "Unknown error: " + std::format("{}", static_cast<unsigned>(code));
 }
 
 }  // namespace utils

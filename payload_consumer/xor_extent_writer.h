@@ -36,7 +36,7 @@ class XORExtentWriter : public BlockExtentWriter {
                   FileDescriptorPtr source_fd,
                   android::snapshot::ICowWriter* cow_writer,
                   const ExtentMap<const CowMergeOperation*>& xor_map,
-                  size_t partition_size)
+                  uint64_t partition_size)
       : src_extents_(op.src_extents()),
         source_fd_(source_fd),
         xor_map_(xor_map),
@@ -63,13 +63,13 @@ class XORExtentWriter : public BlockExtentWriter {
   bool WriteXorCowOp(const uint8_t* bytes,
                      const size_t size,
                      const Extent& xor_ext,
-                     size_t src_offset);
+                     uint64_t src_offset);
   const google::protobuf::RepeatedPtrField<Extent>& src_extents_;
   const FileDescriptorPtr source_fd_;
   const ExtentMap<const CowMergeOperation*>& xor_map_;
   android::snapshot::ICowWriter* cow_writer_;
   std::vector<uint8_t> xor_block_data;
-  const size_t partition_size_;
+  const uint64_t partition_size_;
 };
 
 }  // namespace chromeos_update_engine

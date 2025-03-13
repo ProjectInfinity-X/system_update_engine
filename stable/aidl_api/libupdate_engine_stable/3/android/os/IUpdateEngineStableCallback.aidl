@@ -33,13 +33,9 @@
 
 package android.os;
 /* @hide */
-interface IUpdateEngineStable {
+interface IUpdateEngineStableCallback {
   /* @hide */
-  void applyPayloadFd(in ParcelFileDescriptor pfd, in long payload_offset, in long payload_size, in String[] headerKeyValuePairs);
+  oneway void onStatusUpdate(int status_code, float percentage);
   /* @hide */
-  boolean bind(android.os.IUpdateEngineStableCallback callback);
-  /* @hide */
-  boolean unbind(android.os.IUpdateEngineStableCallback callback);
-  /* @hide */
-  void triggerPostinstall(in String partition);
+  oneway void onPayloadApplicationComplete(int error_code);
 }

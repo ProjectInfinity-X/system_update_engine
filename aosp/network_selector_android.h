@@ -17,7 +17,7 @@
 #ifndef UPDATE_ENGINE_AOSP_NETWORK_SELECTOR_ANDROID_H_
 #define UPDATE_ENGINE_AOSP_NETWORK_SELECTOR_ANDROID_H_
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/common/network_selector_interface.h"
 

@@ -16,18 +16,16 @@
 
 #include "update_engine/payload_consumer/delta_performer.h"
 
-#include <inttypes.h>
 #include <sys/mount.h>
 
 #include <algorithm>
+#include <list>
 #include <string>
 #include <vector>
 
 #include <base/files/file_path.h>
 #include <base/files/file_util.h>
-#include <base/stl_util.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <gmock/gmock-matchers.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest.h>
@@ -37,7 +35,6 @@
 #include "update_engine/common/fake_boot_control.h"
 #include "update_engine/common/fake_hardware.h"
 #include "update_engine/common/fake_prefs.h"
-#include "update_engine/common/hardware_interface.h"
 #include "update_engine/common/mock_download_action.h"
 #include "update_engine/common/mock_prefs.h"
 #include "update_engine/common/test_utils.h"
@@ -251,14 +248,16 @@ static void SignGeneratedShellPayloadWithKeys(
     size_t signature_size{};
     ASSERT_TRUE(
         PayloadSigner::GetMaximumSignatureSize(key_path, &signature_size));
-    signature_size_strings.push_back(base::StringPrintf("%zu", signature_size));
+    signature_size_strings.push_back(
+        android::base::StringPrintf("%zu", signature_size));
   }
-  string signature_size_string = base::JoinString(signature_size_strings, ":");
+  string signature_size_string =
+      android::base::Join(signature_size_strings, ":");
 
   ScopedTempFile hash_file("hash.XXXXXX"), metadata_hash_file("hash.XXXXXX");
   string delta_generator_path = GetBuildArtifactsPath("delta_generator");
   ASSERT_EQ(0,
-            System(base::StringPrintf(
+            System(android::base::StringPrintf(
                 "%s -in_file=%s -signature_size=%s -out_hash_file=%s "
                 "-out_metadata_hash_file=%s",
                 delta_generator_path.c_str(),
@@ -290,27 +289,29 @@ static void SignGeneratedShellPayloadWithKeys(
                                             metadata_signature));
     metadata_sig_file_paths.push_back(metadata_sig_files.back().path());
   }
-  string sig_files_string = base::JoinString(sig_file_paths, ":");
+  string sig_files_string = android::base::Join(sig_file_paths, ":");
   string metadata_sig_files_string =
-      base::JoinString(metadata_sig_file_paths, ":");
+      android::base::Join(metadata_sig_file_paths, ":");
 
   // Add the signature to the payload.
-  ASSERT_EQ(0,
-            System(base::StringPrintf("%s --signature_size=%s -in_file=%s "
-                                      "-payload_signature_file=%s "
-                                      "-metadata_signature_file=%s "
-                                      "-out_file=%s",
-                                      delta_generator_path.c_str(),
-                                      signature_size_string.c_str(),
-                                      payload_path.c_str(),
-                                      sig_files_string.c_str(),
-                                      metadata_sig_files_string.c_str(),
-                                      payload_path.c_str())));
+  ASSERT_EQ(
+      0,
+      System(android::base::StringPrintf("%s --signature_size=%s -in_file=%s "
+                                         "-payload_signature_file=%s "
+                                         "-metadata_signature_file=%s "
+                                         "-out_file=%s",
+                                         delta_generator_path.c_str(),
+                                         signature_size_string.c_str(),
+                                         payload_path.c_str(),
+                                         sig_files_string.c_str(),
+                                         metadata_sig_files_string.c_str(),
+                                         payload_path.c_str())));
 
-  int verify_result = System(base::StringPrintf("%s -in_file=%s -public_key=%s",
-                                                delta_generator_path.c_str(),
-                                                payload_path.c_str(),
-                                                public_key_path.c_str()));
+  int verify_result =
+      System(android::base::StringPrintf("%s -in_file=%s -public_key=%s",
+                                         delta_generator_path.c_str(),
+                                         payload_path.c_str(),
+                                         public_key_path.c_str()));
 
   if (verification_success) {
     ASSERT_EQ(0, verify_result);
@@ -415,30 +416,32 @@ static void GenerateDeltaFile(bool full_kernel,
                             std::end(kRandomString));
     }
     ASSERT_TRUE(utils::WriteFile(
-        base::StringPrintf("%s/hardtocompress", a_mnt.c_str()).c_str(),
+        android::base::StringPrintf("%s/hardtocompress", a_mnt.c_str()).c_str(),
         hardtocompress.data(),
         hardtocompress.size()));
 
     brillo::Blob zeros(16 * 1024, 0);
     ASSERT_EQ(static_cast<int>(zeros.size()),
-              base::WriteFile(base::FilePath(base::StringPrintf(
+              base::WriteFile(base::FilePath(android::base::StringPrintf(
                                   "%s/move-to-sparse", a_mnt.c_str())),
                               reinterpret_cast<const char*>(zeros.data()),
                               zeros.size()));
 
     ASSERT_TRUE(WriteSparseFile(
-        base::StringPrintf("%s/move-from-sparse", a_mnt.c_str()), 16 * 1024));
+        android::base::StringPrintf("%s/move-from-sparse", a_mnt.c_str()),
+        16 * 1024));
 
     ASSERT_TRUE(WriteByteAtOffset(
-        base::StringPrintf("%s/move-semi-sparse", a_mnt.c_str()), 4096));
+        android::base::StringPrintf("%s/move-semi-sparse", a_mnt.c_str()),
+        4096));
 
     // Write 1 MiB of 0xff to try to catch the case where writing a bsdiff
     // patch fails to zero out the final block.
     brillo::Blob ones(1024 * 1024, 0xff);
-    ASSERT_TRUE(
-        utils::WriteFile(base::StringPrintf("%s/ones", a_mnt.c_str()).c_str(),
-                         ones.data(),
-                         ones.size()));
+    ASSERT_TRUE(utils::WriteFile(
+        android::base::StringPrintf("%s/ones", a_mnt.c_str()).c_str(),
+        ones.data(),
+        ones.size()));
   }
 
   // Create a result image with image_size bytes of garbage.
@@ -505,7 +508,7 @@ static void GenerateDeltaFile(bool full_kernel,
                             std::end(kRandomString));
     }
     ASSERT_TRUE(utils::WriteFile(
-        base::StringPrintf("%s/hardtocompress", b_mnt.c_str()).c_str(),
+        android::base::StringPrintf("%s/hardtocompress", b_mnt.c_str()).c_str(),
         hardtocompress.data(),
         hardtocompress.size()));
   }
@@ -904,17 +907,16 @@ void VerifyPayloadResult(DeltaPerformer* performer,
     // no need to verify new partition if VerifyPayload failed.
     return;
   }
-
-  CompareFilesByBlock(state->result_kernel->path(),
-                      state->new_kernel->path(),
-                      state->kernel_size);
-  CompareFilesByBlock(
-      state->result_img->path(), state->b_img->path(), state->image_size);
+  ASSERT_NO_FATAL_FAILURE(CompareFilesByBlock(state->result_kernel->path(),
+                                              state->new_kernel->path(),
+                                              state->kernel_size));
+  ASSERT_NO_FATAL_FAILURE(CompareFilesByBlock(
+      state->result_img->path(), state->b_img->path(), state->image_size));
 
   brillo::Blob updated_kernel_partition;
   ASSERT_TRUE(
       utils::ReadFile(state->result_kernel->path(), &updated_kernel_partition));
-  ASSERT_GE(updated_kernel_partition.size(), base::size(kNewData));
+  ASSERT_GE(updated_kernel_partition.size(), std::size(kNewData));
   ASSERT_TRUE(std::equal(std::begin(kNewData),
                          std::end(kNewData),
                          updated_kernel_partition.begin()));
@@ -955,7 +957,8 @@ void VerifyPayload(DeltaPerformer* performer,
       break;  // appease gcc
   }
 
-  VerifyPayloadResult(performer, state, expected_result, minor_version);
+  ASSERT_NO_FATAL_FAILURE(
+      VerifyPayloadResult(performer, state, expected_result, minor_version));
 }
 
 void DoSmallImageTest(bool full_kernel,
@@ -966,22 +969,23 @@ void DoSmallImageTest(bool full_kernel,
                       uint32_t minor_version) {
   DeltaState state;
   DeltaPerformer* performer = nullptr;
-  GenerateDeltaFile(full_kernel,
-                    full_rootfs,
-                    chunk_size,
-                    signature_test,
-                    &state,
-                    minor_version);
+  ASSERT_NO_FATAL_FAILURE(GenerateDeltaFile(full_kernel,
+                                            full_rootfs,
+                                            chunk_size,
+                                            signature_test,
+                                            &state,
+                                            minor_version));
 
-  ApplyDeltaFile(full_kernel,
-                 full_rootfs,
-                 signature_test,
-                 &state,
-                 hash_checks_mandatory,
-                 kValidOperationData,
-                 &performer,
-                 minor_version);
-  VerifyPayload(performer, &state, signature_test, minor_version);
+  ASSERT_NO_FATAL_FAILURE(ApplyDeltaFile(full_kernel,
+                                         full_rootfs,
+                                         signature_test,
+                                         &state,
+                                         hash_checks_mandatory,
+                                         kValidOperationData,
+                                         &performer,
+                                         minor_version));
+  ASSERT_NO_FATAL_FAILURE(
+      VerifyPayload(performer, &state, signature_test, minor_version));
   delete performer;
 }
 
@@ -991,14 +995,14 @@ void DoOperationHashMismatchTest(OperationHashTest op_hash_test,
   uint64_t minor_version = kFullPayloadMinorVersion;
   GenerateDeltaFile(true, true, -1, kSignatureGenerated, &state, minor_version);
   DeltaPerformer* performer = nullptr;
-  ApplyDeltaFile(true,
-                 true,
-                 kSignatureGenerated,
-                 &state,
-                 hash_checks_mandatory,
-                 op_hash_test,
-                 &performer,
-                 minor_version);
+  ASSERT_NO_FATAL_FAILURE(ApplyDeltaFile(true,
+                                         true,
+                                         kSignatureGenerated,
+                                         &state,
+                                         hash_checks_mandatory,
+                                         op_hash_test,
+                                         &performer,
+                                         minor_version));
   delete performer;
 }
 

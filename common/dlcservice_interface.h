@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 namespace chromeos_update_engine {
 

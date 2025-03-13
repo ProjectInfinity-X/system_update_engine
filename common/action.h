@@ -23,7 +23,7 @@
 #include <string>
 
 #include <base/logging.h>
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/common/action_pipe.h"
 #include "update_engine/common/action_processor.h"

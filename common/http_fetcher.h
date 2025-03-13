@@ -24,7 +24,7 @@
 
 #include <base/callback.h>
 #include <base/logging.h>
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <brillo/message_loops/message_loop.h>
 #include <brillo/secure_blob.h>
 
@@ -47,7 +47,7 @@ class HttpFetcher {
   // |proxy_resolver| is the resolver that will be consulted for proxy
   // settings. It may be null, in which case direct connections will
   // be used. Does not take ownership of the resolver.
-  explicit HttpFetcher()
+  HttpFetcher()
       : post_data_set_(false),
         http_response_code_(0),
         delegate_(nullptr),

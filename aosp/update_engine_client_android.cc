@@ -157,6 +157,11 @@ int UpdateEngineClientAndroid::OnInit() {
                 "Perform just the slow switching part of OTA. "
                 "Used to revert a slot switch or re-do slot switch. Valid "
                 "values are 'true' and 'false'");
+  DEFINE_string(
+      trigger_postinstall,
+      UNSPECIFIED_FLAG,
+      "Only run postinstall sciprts. And only run postinstall script for the "
+      "specified partition. Example: \"system\", \"product\"");
   DEFINE_bool(suspend, false, "Suspend an ongoing update and exit.");
   DEFINE_bool(resume, false, "Resume a suspended update.");
   DEFINE_bool(cancel, false, "Cancel the ongoing update and exit.");
@@ -230,6 +235,11 @@ int UpdateEngineClientAndroid::OnInit() {
 
   if (FLAGS_reset_status) {
     return ExitWhenIdle(service_->resetStatus());
+  }
+
+  if (FLAGS_trigger_postinstall != UNSPECIFIED_FLAG) {
+    return ExitWhenIdle(service_->triggerPostinstall(
+        android::String16(FLAGS_trigger_postinstall.c_str())));
   }
 
   if (FLAGS_switch_slot != UNSPECIFIED_FLAG) {

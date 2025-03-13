@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <brillo/secure_blob.h>
 
 #include "update_engine/common/action.h"
@@ -181,9 +181,6 @@ struct InstallPlan {
   // True if the update should run its post-install step.
   // False otherwise.
   bool run_post_install{true};
-
-  // True if this rollback should preserve some system data.
-  bool rollback_data_save_requested{false};
 
   // True if the update should write verity.
   // False otherwise.

@@ -31,8 +31,7 @@
 #if BASE_VER < 780000  // Android
 #include <base/message_loop/message_loop.h>
 #endif  // BASE_VER < 780000
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #if BASE_VER >= 780000  // Chrome OS
 #include <base/task/single_thread_task_executor.h>
 #endif  // BASE_VER >= 780000
@@ -247,7 +246,7 @@ TEST_F(SubprocessTest, CancelTest) {
   vector<string> cmd = {
       kBinPath "/sh",
       "-c",
-      base::StringPrintf(
+      android::base::StringPrintf(
           // The 'sleep' launched below could be left behind as an orphaned
           // process when the 'sh' process is terminated by SIGTERM. As a
           // remedy, trap SIGTERM and kill the 'sleep' process, which requires

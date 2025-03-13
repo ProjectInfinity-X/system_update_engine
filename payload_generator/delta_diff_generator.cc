@@ -16,9 +16,7 @@
 
 #include "update_engine/payload_generator/delta_diff_generator.h"
 
-#include <errno.h>
 #include <fcntl.h>
-#include <inttypes.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -32,9 +30,7 @@
 #include <base/threading/simple_thread.h>
 
 #include "update_engine/common/utils.h"
-#include "update_engine/payload_consumer/delta_performer.h"
 #include "update_engine/payload_consumer/file_descriptor.h"
-#include "update_engine/payload_consumer/payload_constants.h"
 #include "update_engine/payload_generator/ab_generator.h"
 #include "update_engine/payload_generator/annotated_operation.h"
 #include "update_engine/payload_generator/blob_file_writer.h"
@@ -186,8 +182,7 @@ bool GenerateUpdatePayloadFile(const PayloadGenerationConfig& config,
     off_t data_file_size = 0;
     BlobFileWriter blob_file(data_file.fd(), &data_file_size);
     if (config.is_delta) {
-      TEST_AND_RETURN_FALSE(config.source.partitions.size() ==
-                            config.target.partitions.size());
+      TEST_EQ(config.source.partitions.size(), config.target.partitions.size());
     }
     PartitionConfig empty_part("");
     std::vector<std::vector<AnnotatedOperation>> all_aops;
@@ -200,10 +195,18 @@ bool GenerateUpdatePayloadFile(const PayloadGenerationConfig& config,
         config.target.partitions.size());
 
     std::vector<PartitionProcessor> partition_tasks{};
-    auto thread_count = std::min<int>(diff_utils::GetMaxThreads(),
-                                      config.target.partitions.size());
+    auto thread_count = std::min<size_t>(diff_utils::GetMaxThreads(),
+                                         config.target.partitions.size());
+    if (thread_count > config.max_threads && config.max_threads > 0) {
+      thread_count = config.max_threads;
+    }
+    if (thread_count < 1) {
+      thread_count = 1;
+    }
     base::DelegateSimpleThreadPool thread_pool{"partition-thread-pool",
-                                               thread_count};
+                                               static_cast<int>(thread_count)};
+    LOG(INFO) << "Using " << thread_count << " threads to process "
+              << config.target.partitions.size() << " partitions";
     for (size_t i = 0; i < config.target.partitions.size(); i++) {
       const PartitionConfig& old_part =
           config.is_delta ? config.source.partitions[i] : empty_part;

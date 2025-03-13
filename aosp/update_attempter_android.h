@@ -52,7 +52,7 @@ enum class OTAResult {
   OTA_SUCCESSFUL,
 };
 
-class UpdateAttempterAndroid
+class UpdateAttempterAndroid final
     : public ServiceDelegateAndroidInterface,
       public ActionProcessorDelegate,
       public DownloadActionDelegate,
@@ -99,6 +99,7 @@ class UpdateAttempterAndroid
   bool setShouldSwitchSlotOnReboot(const std::string& metadata_filename,
                                    Error* error) override;
   bool resetShouldSwitchSlotOnReboot(Error* error) override;
+  bool TriggerPostinstall(const std::string& partition, Error* error) override;
 
   bool SetPerformanceMode(bool enable, Error* error) override;
 
@@ -288,7 +289,6 @@ class UpdateAttempterAndroid
 
   // The path to the zip file with X509 certificates.
   std::string update_certificates_path_{constants::kUpdateCertificatesPath};
-  ErrorCode last_error_{ErrorCode::kSuccess};
 
   metrics_utils::PersistedValue<int64_t> metric_bytes_downloaded_;
   metrics_utils::PersistedValue<int64_t> metric_total_bytes_downloaded_;

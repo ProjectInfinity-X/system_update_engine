@@ -31,9 +31,7 @@
 #include <base/files/file_path.h>
 #include <base/files/file_util.h>
 #include <base/logging.h>
-#include <base/stl_util.h>
 #include <base/strings/string_split.h>
-#include <base/strings/string_util.h>
 
 #include "update_engine/common/action_processor.h"
 #include "update_engine/common/boot_control_interface.h"
@@ -130,8 +128,7 @@ void PostinstallRunnerAction::PerformAction() {
   // that retains a small amount of system state such as enrollment and
   // network configuration. In both cases all user accounts are deleted.
   if (install_plan_.powerwash_required) {
-    if (hardware_->SchedulePowerwash(
-            install_plan_.rollback_data_save_requested)) {
+    if (hardware_->SchedulePowerwash()) {
       powerwash_scheduled_ = true;
     } else {
       return CompletePostinstall(ErrorCode::kPostinstallPowerwashError);
@@ -397,7 +394,7 @@ void PostinstallRunnerAction::OnProgressFdReady() {
     bytes_read = 0;
     bool eof;
     bool ok =
-        utils::ReadAll(progress_fd_, buf, base::size(buf), &bytes_read, &eof);
+        utils::ReadAll(progress_fd_, buf, std::size(buf), &bytes_read, &eof);
     progress_buffer_.append(buf, bytes_read);
     // Process every line.
     vector<string> lines = base::SplitString(

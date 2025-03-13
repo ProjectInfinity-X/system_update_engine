@@ -176,7 +176,7 @@ class FilesystemVerifierAction : public InstallPlanAction {
   // Cumulative sum of partition sizes. Used for progress report.
   // This vector will always start with 0, and end with total size of all
   // partitions.
-  std::vector<size_t> partition_weight_;
+  std::vector<uint64_t> partition_weight_;
 
   DISALLOW_COPY_AND_ASSIGN(FilesystemVerifierAction);
 };

@@ -16,14 +16,11 @@
 
 #include "update_engine/common/download_action.h"
 
-#include <errno.h>
-
-#include <algorithm>
 #include <string>
 
 #include <base/files/file_path.h>
 #include <base/metrics/statistics_recorder.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 
 #include "update_engine/common/boot_control_interface.h"
 #include "update_engine/common/error_code_utils.h"

@@ -29,8 +29,7 @@
 #include <vector>
 
 #include <base/strings/string_number_conversions.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 
 #include "update_engine/common/error_code.h"
 #include "update_engine/common/utils.h"
@@ -328,12 +327,12 @@ bool PartitionWriter::ValidateSourceHash(const brillo::Blob& calculated_hash,
     vector<string> source_extents;
     for (const Extent& ext : operation.src_extents()) {
       source_extents.push_back(
-          base::StringPrintf("%" PRIu64 ":%" PRIu64,
-                             static_cast<uint64_t>(ext.start_block()),
-                             static_cast<uint64_t>(ext.num_blocks())));
+          android::base::StringPrintf("%" PRIu64 ":%" PRIu64,
+                                      static_cast<uint64_t>(ext.start_block()),
+                                      static_cast<uint64_t>(ext.num_blocks())));
     }
     LOG(ERROR) << "Operation source (offset:size) in blocks: "
-               << base::JoinString(source_extents, ",");
+               << android::base::Join(source_extents, ",");
 
     // Log remount history if this device is an ext4 partition.
     LogMountHistory(source_fd);

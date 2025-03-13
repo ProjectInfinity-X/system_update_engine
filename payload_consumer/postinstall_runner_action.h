@@ -26,7 +26,6 @@
 #include <brillo/message_loops/message_loop.h>
 #include <gtest/gtest_prod.h>
 
-#include "update_engine/common/action.h"
 #include "update_engine/common/boot_control_interface.h"
 #include "update_engine/common/hardware_interface.h"
 #include "update_engine/payload_consumer/install_plan.h"

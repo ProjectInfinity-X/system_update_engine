@@ -22,8 +22,7 @@
 #include <base/format_macros.h>
 #include <base/logging.h>
 #include <base/strings/string_number_conversions.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 
 #include "update_engine/common/utils.h"
 #include "update_engine/update_metadata.pb.h"
@@ -36,7 +35,7 @@ namespace chromeos_update_engine {
 namespace {
 string PayloadUrlsToString(
     const decltype(InstallPlan::Payload::payload_urls)& payload_urls) {
-  return "(" + base::JoinString(payload_urls, ",") + ")";
+  return "(" + android::base::Join(payload_urls, ",") + ")";
 }
 
 string VectorToString(const vector<std::pair<string, string>>& input,
@@ -46,9 +45,10 @@ string VectorToString(const vector<std::pair<string, string>>& input,
                  input.end(),
                  std::back_inserter(vec),
                  [](const auto& pair) {
-                   return base::JoinString({pair.first, pair.second}, ": ");
+                   return android::base::Join(vector{pair.first, pair.second},
+                                              ": ");
                  });
-  return base::JoinString(vec, separator);
+  return android::base::Join(vec, separator);
 }
 }  // namespace
 
@@ -81,8 +81,7 @@ void InstallPlan::Dump() const {
 
 string InstallPlan::ToString() const {
   string url_str = download_url;
-  if (base::StartsWith(
-          url_str, "fd://", base::CompareCase::INSENSITIVE_ASCII)) {
+  if (android::base::StartsWith(ToLower(url_str), "fd://")) {
     int fd = std::stoi(url_str.substr(strlen("fd://")));
     url_str = utils::GetFilePath(fd);
   }
@@ -99,8 +98,6 @@ string InstallPlan::ToString() const {
           {"powerwash_required", utils::ToString(powerwash_required)},
           {"switch_slot_on_reboot", utils::ToString(switch_slot_on_reboot)},
           {"run_post_install", utils::ToString(run_post_install)},
-          {"rollback_data_save_requested",
-           utils::ToString(rollback_data_save_requested)},
           {"write_verity", utils::ToString(write_verity)},
       },
       "\n"));
@@ -109,12 +106,12 @@ string InstallPlan::ToString() const {
     result_str.emplace_back(VectorToString(
         {
             {"Partition", partition.name},
-            {"source_size", base::NumberToString(partition.source_size)},
+            {"source_size", std::format("{}", partition.source_size)},
             {"source_path", partition.source_path},
             {"source_hash",
              base::HexEncode(partition.source_hash.data(),
                              partition.source_hash.size())},
-            {"target_size", base::NumberToString(partition.target_size)},
+            {"target_size", std::format("{}", partition.target_size)},
             {"target_path", partition.target_path},
             {"target_hash",
              base::HexEncode(partition.target_hash.data(),
@@ -131,10 +128,10 @@ string InstallPlan::ToString() const {
     const auto& payload = payloads[i];
     result_str.emplace_back(VectorToString(
         {
-            {"Payload", base::NumberToString(i)},
+            {"Payload", std::format("{}", i)},
             {"urls", PayloadUrlsToString(payload.payload_urls)},
-            {"size", base::NumberToString(payload.size)},
-            {"metadata_size", base::NumberToString(payload.metadata_size)},
+            {"size", std::format("{}", payload.size)},
+            {"metadata_size", std::format("{}", payload.metadata_size)},
             {"metadata_signature", payload.metadata_signature},
             {"hash", base::HexEncode(payload.hash.data(), payload.hash.size())},
             {"type", InstallPayloadTypeToString(payload.type)},
@@ -145,7 +142,7 @@ string InstallPlan::ToString() const {
         "\n  "));
   }
 
-  return base::JoinString(result_str, "\n");
+  return android::base::Join(result_str, "\n");
 }
 
 bool InstallPlan::LoadPartitionsFromSlots(BootControlInterface* boot_control) {

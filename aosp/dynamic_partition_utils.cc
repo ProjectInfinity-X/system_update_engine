@@ -18,8 +18,8 @@
 
 #include <vector>
 
+#include <android-base/strings.h>
 #include <base/logging.h>
-#include <base/strings/string_util.h>
 
 using android::fs_mgr::MetadataBuilder;
 
@@ -29,7 +29,7 @@ void DeleteGroupsWithSuffix(MetadataBuilder* builder,
                             const std::string& suffix) {
   std::vector<std::string> groups = builder->ListGroups();
   for (const auto& group_name : groups) {
-    if (base::EndsWith(group_name, suffix, base::CompareCase::SENSITIVE)) {
+    if (android::base::EndsWith(group_name, suffix)) {
       LOG(INFO) << "Removing group " << group_name;
       builder->RemoveGroupAndPartitions(group_name);
     }

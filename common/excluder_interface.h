@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 namespace chromeos_update_engine {
 

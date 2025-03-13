@@ -562,6 +562,15 @@ constexpr std::string_view ToStringView(
 
 bool GetTempName(const std::string& path, base::FilePath* template_path);
 
+template <typename String>
+std::string ToLower(const String& str) {
+  auto copy = std::string(str);
+  std::transform(str.begin(), str.end(), copy.begin(), [](unsigned char c) {
+    return std::tolower(c);
+  });
+  return copy;
+}
+
 }  // namespace chromeos_update_engine
 
 #define TEST_AND_RETURN_FALSE_ERRNO(_x)                             \

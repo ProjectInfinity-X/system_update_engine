@@ -18,13 +18,11 @@
 #define UPDATE_ENGINE_AOSP_HARDWARE_ANDROID_H_
 
 #include <string>
-#include <string_view>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <base/time/time.h>
 
 #include "update_engine/common/error_code.h"
-#include "update_engine/common/hardware.h"
 #include "update_engine/common/hardware_interface.h"
 
 namespace chromeos_update_engine {
@@ -49,7 +47,7 @@ class HardwareAndroid : public HardwareInterface {
   bool SetMaxFirmwareKeyRollforward(int firmware_max_rollforward) override;
   bool SetMaxKernelKeyRollforward(int kernel_max_rollforward) override;
   int GetPowerwashCount() const override;
-  bool SchedulePowerwash(bool save_rollback_data) override;
+  bool SchedulePowerwash() override;
   bool CancelPowerwash() override;
   bool GetNonVolatileDirectory(base::FilePath* path) const override;
   bool GetPowerwashSafeDirectory(base::FilePath* path) const override;

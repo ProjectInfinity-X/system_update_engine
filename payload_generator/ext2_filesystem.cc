@@ -32,7 +32,7 @@
 #include <set>
 
 #include <base/logging.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 
 #include "update_engine/common/utils.h"
 #include "update_engine/payload_generator/extent_ranges.h"
@@ -196,7 +196,7 @@ bool Ext2Filesystem::GetFiles(vector<File>* files) const {
     if (it_ino == EXT2_RESIZE_INO) {
       file.name = "<group-descriptors>";
     } else {
-      file.name = base::StringPrintf("<inode-%u>", it_ino);
+      file.name = android::base::StringPrintf("<inode-%u>", it_ino);
     }
 
     memset(&file.file_stat, 0, sizeof(file.file_stat));
@@ -266,7 +266,7 @@ bool Ext2Filesystem::GetFiles(vector<File>* files) const {
       // just skiped.
       LOG(WARNING) << "Reading directory name on inode " << dir_ino
                    << " (error " << error << ")";
-      inodes[dir_ino].name = base::StringPrintf("<dir-%u>", dir_ino);
+      inodes[dir_ino].name = android::base::StringPrintf("<dir-%u>", dir_ino);
     } else {
       inodes[dir_ino].name = dir_name;
       files->push_back(inodes[dir_ino]);

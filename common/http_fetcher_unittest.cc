@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include <android-base/stringprintf.h>
 #include <base/bind.h>
 #include <base/location.h>
 #include <base/logging.h>
@@ -34,8 +35,7 @@
 #endif  // BASE_VER < 780000
 #include <base/stl_util.h>
 #include <base/strings/string_number_conversions.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #if BASE_VER >= 780000  // CrOS
 #include <base/task/single_thread_task_executor.h>
 #endif  // BASE_VER >= 780000
@@ -88,8 +88,8 @@ namespace chromeos_update_engine {
 static const char* kUnusedUrl = "unused://unused";
 
 static inline string LocalServerUrlForPath(in_port_t port, const string& path) {
-  string port_str = (port ? base::StringPrintf(":%hu", port) : "");
-  return base::StringPrintf(
+  string port_str = (port ? android::base::StringPrintf(":%hu", port) : "");
+  return android::base::StringPrintf(
       "http://127.0.0.1%s%s", port_str.c_str(), path.c_str());
 }
 
@@ -272,7 +272,7 @@ class LibcurlHttpFetcherFactory : public AnyHttpFetcherFactory {
 
   string BigUrl(in_port_t port) const override {
     return LocalServerUrlForPath(
-        port, base::StringPrintf("/download/%d", kBigLength));
+        port, android::base::StringPrintf("/download/%d", kBigLength));
   }
   string SmallUrl(in_port_t port) const override {
     return LocalServerUrlForPath(port, "/foo");
@@ -768,16 +768,17 @@ TYPED_TEST(HttpFetcherTest, FlakyTest) {
     unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
-    this->loop_.PostTask(FROM_HERE,
-                         base::Bind(&StartTransfer,
-                                    fetcher.get(),
-                                    LocalServerUrlForPath(
-                                        server->GetPort(),
-                                        base::StringPrintf("/flaky/%d/%d/%d/%d",
-                                                           kBigLength,
-                                                           kFlakyTruncateLength,
-                                                           kFlakySleepEvery,
-                                                           kFlakySleepSecs))));
+    this->loop_.PostTask(
+        FROM_HERE,
+        base::Bind(&StartTransfer,
+                   fetcher.get(),
+                   LocalServerUrlForPath(
+                       server->GetPort(),
+                       android::base::StringPrintf("/flaky/%d/%d/%d/%d",
+                                                   kBigLength,
+                                                   kFlakyTruncateLength,
+                                                   kFlakySleepEvery,
+                                                   kFlakySleepSecs))));
     this->loop_.Run();
 
     // verify the data we get back
@@ -908,12 +909,13 @@ TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
       FROM_HERE,
       base::Bind(StartTransfer,
                  fetcher.get(),
-                 LocalServerUrlForPath(port,
-                                       base::StringPrintf("/flaky/%d/%d/%d/%d",
-                                                          kBigLength,
-                                                          kFlakyTruncateLength,
-                                                          kFlakySleepEvery,
-                                                          kFlakySleepSecs))));
+                 LocalServerUrlForPath(
+                     port,
+                     android::base::StringPrintf("/flaky/%d/%d/%d/%d",
+                                                 kBigLength,
+                                                 kFlakyTruncateLength,
+                                                 kFlakySleepEvery,
+                                                 kFlakySleepSecs))));
   this->loop_.Run();
   EXPECT_EQ(1, delegate.times_transfer_complete_called_);
   EXPECT_EQ(0, delegate.times_transfer_terminated_called_);
@@ -940,12 +942,13 @@ TYPED_TEST(HttpFetcherTest, TerminateTransferWhenServerDiedTest) {
       FROM_HERE,
       base::Bind(StartTransfer,
                  fetcher.get(),
-                 LocalServerUrlForPath(port,
-                                       base::StringPrintf("/flaky/%d/%d/%d/%d",
-                                                          kBigLength,
-                                                          kFlakyTruncateLength,
-                                                          kFlakySleepEvery,
-                                                          kFlakySleepSecs))));
+                 LocalServerUrlForPath(
+                     port,
+                     android::base::StringPrintf("/flaky/%d/%d/%d/%d",
+                                                 kBigLength,
+                                                 kFlakyTruncateLength,
+                                                 kFlakySleepEvery,
+                                                 kFlakySleepSecs))));
   // Terminating the transfer after 3 seconds gives it a chance to contact the
   // server and enter the retry loop.
   this->loop_.PostDelayedTask(FROM_HERE,
@@ -1032,7 +1035,7 @@ TYPED_TEST(HttpFetcherTest, SimpleRedirectTest) {
   ASSERT_TRUE(server->started_);
 
   for (size_t c = 0; c < base::size(kRedirectCodes); ++c) {
-    const string url = base::StringPrintf(
+    const string url = android::base::StringPrintf(
         "/redirect/%d/download/%d", kRedirectCodes[c], kMediumLength);
     RedirectTest(server.get(), true, url, this->test_.NewLargeFetcher());
   }
@@ -1047,10 +1050,10 @@ TYPED_TEST(HttpFetcherTest, MaxRedirectTest) {
 
   string url;
   for (int r = 0; r < kDownloadMaxRedirects; r++) {
-    url += base::StringPrintf("/redirect/%d",
-                              kRedirectCodes[r % base::size(kRedirectCodes)]);
+    url += android::base::StringPrintf(
+        "/redirect/%d", kRedirectCodes[r % base::size(kRedirectCodes)]);
   }
-  url += base::StringPrintf("/download/%d", kMediumLength);
+  url += android::base::StringPrintf("/download/%d", kMediumLength);
   RedirectTest(server.get(), true, url, this->test_.NewLargeFetcher());
 }
 
@@ -1063,10 +1066,10 @@ TYPED_TEST(HttpFetcherTest, BeyondMaxRedirectTest) {
 
   string url;
   for (int r = 0; r < kDownloadMaxRedirects + 1; r++) {
-    url += base::StringPrintf("/redirect/%d",
-                              kRedirectCodes[r % base::size(kRedirectCodes)]);
+    url += android::base::StringPrintf(
+        "/redirect/%d", kRedirectCodes[r % base::size(kRedirectCodes)]);
   }
-  url += base::StringPrintf("/download/%d", kMediumLength);
+  url += android::base::StringPrintf("/download/%d", kMediumLength);
   RedirectTest(server.get(), false, url, this->test_.NewLargeFetcher());
 }
 
@@ -1118,12 +1121,12 @@ void MultiTest(HttpFetcher* fetcher_in,
                                                   e = ranges.end();
        it != e;
        ++it) {
-    string tmp_str = base::StringPrintf("%jd+", it->first);
+    string tmp_str = android::base::StringPrintf("%jd+", it->first);
     if (it->second > 0) {
-      base::StringAppendF(&tmp_str, "%jd", it->second);
+      android::base::StringAppendF(&tmp_str, "%jd", it->second);
       multi_fetcher->AddRange(it->first, it->second);
     } else {
-      base::StringAppendF(&tmp_str, "?");
+      android::base::StringAppendF(&tmp_str, "?");
       multi_fetcher->AddRange(it->first);
     }
     LOG(INFO) << "added range: " << tmp_str;
@@ -1256,9 +1259,9 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetRecoverableTest) {
   ranges.push_back(make_pair(99, 0));
   MultiTest(this->test_.NewLargeFetcher(3),
             this->test_.fake_hardware(),
-            LocalServerUrlForPath(
-                server->GetPort(),
-                base::StringPrintf("/error-if-offset/%d/2", kBigLength)),
+            LocalServerUrlForPath(server->GetPort(),
+                                  android::base::StringPrintf(
+                                      "/error-if-offset/%d/2", kBigLength)),
             ranges,
             "abcdefghijabcdefghijabcdejabcdefghijabcdef",
             kBigLength - (99 - 25),
@@ -1279,9 +1282,9 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetUnrecoverableTest) {
   ranges.push_back(make_pair(99, 0));
   MultiTest(this->test_.NewLargeFetcher(),
             this->test_.fake_hardware(),
-            LocalServerUrlForPath(
-                server->GetPort(),
-                base::StringPrintf("/error-if-offset/%d/3", kBigLength)),
+            LocalServerUrlForPath(server->GetPort(),
+                                  android::base::StringPrintf(
+                                      "/error-if-offset/%d/3", kBigLength)),
             ranges,
             "abcdefghijabcdefghijabcde",  // only received the first chunk
             25,

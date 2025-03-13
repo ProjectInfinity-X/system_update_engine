@@ -23,12 +23,10 @@
 #include <base/format_macros.h>
 #include <base/location.h>
 #include <base/logging.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <brillo/streams/file_stream.h>
 
-#include "update_engine/common/hardware_interface.h"
-#include "update_engine/common/platform_constants.h"
+#include "update_engine/common/utils.h"
 
 using std::string;
 
@@ -43,9 +41,8 @@ namespace chromeos_update_engine {
 // static
 bool FileFetcher::SupportedUrl(const string& url) {
   // Note that we require the file path to start with a "/".
-  return (
-      base::StartsWith(url, "file:///", base::CompareCase::INSENSITIVE_ASCII) ||
-      base::StartsWith(url, "fd://", base::CompareCase::INSENSITIVE_ASCII));
+  return (android::base::StartsWith(ToLower(url), "file:///") ||
+          android::base::StartsWith(ToLower(url), "fd://"));
 }
 
 FileFetcher::~FileFetcher() {
@@ -70,7 +67,7 @@ void FileFetcher::BeginTransfer(const string& url) {
 
   string file_path;
 
-  if (base::StartsWith(url, "fd://", base::CompareCase::INSENSITIVE_ASCII)) {
+  if (android::base::StartsWith(ToLower(url), "fd://")) {
     int fd = std::stoi(url.substr(strlen("fd://")));
     file_path = url;
     stream_ = brillo::FileStream::FromFileDescriptor(fd, false, nullptr);

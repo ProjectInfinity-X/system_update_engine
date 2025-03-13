@@ -20,10 +20,11 @@
 
 #include <base/bind.h>
 #include <base/logging.h>
-#include <base/strings/string_util.h>
 #include <base/time/time.h>
 #include <brillo/message_loops/message_loop.h>
 #include <gtest/gtest.h>
+
+#include "update_engine/common/utils.h"
 
 // This is a mock implementation of HttpFetcher which is useful for testing.
 
@@ -107,11 +108,11 @@ void MockHttpFetcher::TerminateTransfer() {
 
 void MockHttpFetcher::SetHeader(const std::string& header_name,
                                 const std::string& header_value) {
-  extra_headers_[base::ToLowerASCII(header_name)] = header_value;
+  extra_headers_[ToLower(header_name)] = header_value;
 }
 
 std::string MockHttpFetcher::GetHeader(const std::string& header_name) const {
-  const auto it = extra_headers_.find(base::ToLowerASCII(header_name));
+  const auto it = extra_headers_.find(ToLower(header_name));
   if (it == extra_headers_.end())
     return "";
   return it->second;

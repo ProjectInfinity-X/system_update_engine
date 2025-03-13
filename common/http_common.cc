@@ -20,7 +20,7 @@
 
 #include <cstdlib>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <base/stl_util.h>
 
 namespace chromeos_update_engine {

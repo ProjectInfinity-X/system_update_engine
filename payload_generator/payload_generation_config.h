@@ -266,7 +266,9 @@ struct PayloadGenerationConfig {
 
   std::string security_patch_level;
 
-  uint32_t max_threads = 0;
+  // This doesn't mean we will use 256 threads, we still upper bound thread
+  // count by number of CPU cores
+  uint32_t max_threads = 256;
 
   std::vector<bsdiff::CompressorType> compressors{
       bsdiff::CompressorType::kBZ2, bsdiff::CompressorType::kBrotli};

@@ -24,6 +24,7 @@
 #include <utils/String8.h>
 
 #include "update_engine/aosp/binder_service_android_common.h"
+#include "update_engine/common/error_code.h"
 
 using android::binder::Status;
 using android::os::IUpdateEngineCallback;
@@ -249,6 +250,16 @@ Status BinderUpdateEngineAndroidService::cleanupSuccessfulUpdate(
   Error error;
   service_delegate_->CleanupSuccessfulUpdate(
       std::make_unique<CleanupSuccessfulUpdateCallback>(callback), &error);
+  if (error.error_code != ErrorCode::kSuccess)
+    return ErrorPtrToStatus(error);
+  return Status::ok();
+}
+
+Status BinderUpdateEngineAndroidService::triggerPostinstall(
+    const ::android::String16& partition) {
+  Error error;
+  service_delegate_->TriggerPostinstall(android::String8(partition).c_str(),
+                                        &error);
   if (error.error_code != ErrorCode::kSuccess)
     return ErrorPtrToStatus(error);
   return Status::ok();

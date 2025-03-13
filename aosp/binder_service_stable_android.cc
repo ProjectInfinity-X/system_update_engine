@@ -16,8 +16,6 @@
 
 #include "update_engine/aosp/binder_service_stable_android.h"
 
-#include <memory>
-
 #include <base/bind.h>
 #include <base/logging.h>
 #include <binderwrapper/binder_wrapper.h>
@@ -123,6 +121,17 @@ bool BinderUpdateEngineAndroidStableService::UnbindCallback(
   }
   callback_ = nullptr;
   return true;
+}
+
+android::binder::Status
+BinderUpdateEngineAndroidStableService::triggerPostinstall(
+    const ::android::String16& partition) {
+  Error error;
+  if (!service_delegate_->TriggerPostinstall(
+          android::String8{partition}.c_str(), &error)) {
+    return ErrorPtrToStatus(error);
+  }
+  return Status::ok();
 }
 
 }  // namespace chromeos_update_engine

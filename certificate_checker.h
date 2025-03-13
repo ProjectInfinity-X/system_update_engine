@@ -22,7 +22,7 @@
 
 #include <string>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 namespace chromeos_update_engine {

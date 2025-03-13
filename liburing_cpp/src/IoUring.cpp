@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-#include <asm-generic/errno-base.h>
+#include <errno.h>
 #include <liburing_cpp/IoUring.h>
 #include <string.h>
 

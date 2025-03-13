@@ -23,7 +23,7 @@
 #include <string_view>
 #include <vector>
 
-#include <base/macros.h>
+#include <android-base/macros.h>
 
 #include "update_engine/common/prefs_interface.h"
 

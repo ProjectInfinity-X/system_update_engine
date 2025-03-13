@@ -16,7 +16,7 @@
 
 #include "update_engine/common/multi_range_http_fetcher.h"
 
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 
 #include <algorithm>
 #include <string>
@@ -183,7 +183,7 @@ void MultiRangeHttpFetcher::Reset() {
 }
 
 std::string MultiRangeHttpFetcher::Range::ToString() const {
-  std::string range_str = base::StringPrintf("%jd+", offset());
+  std::string range_str = android::base::StringPrintf("%jd+", offset());
   if (HasLength())
     range_str += std::to_string(length());
   else

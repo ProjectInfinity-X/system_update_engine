@@ -29,8 +29,7 @@
 #include <base/location.h>
 #include <base/logging.h>
 #include <base/strings/string_split.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <base/threading/thread_task_runner_handle.h>
 
 #ifdef __ANDROID__
@@ -83,7 +82,7 @@ int LibcurlHttpFetcher::LibcurlCloseSocketCallback(void* clientp,
 
   LibcurlHttpFetcher* fetcher = static_cast<LibcurlHttpFetcher*>(clientp);
   // Stop watching the socket before closing it.
-  for (size_t t = 0; t < base::size(fetcher->fd_controller_maps_); ++t) {
+  for (size_t t = 0; t < std::size(fetcher->fd_controller_maps_); ++t) {
     fetcher->fd_controller_maps_[t].erase(item);
   }
 
@@ -109,28 +108,24 @@ LibcurlHttpFetcher::~LibcurlHttpFetcher() {
   CleanUp();
 }
 
-bool LibcurlHttpFetcher::GetProxyType(const string& proxy,
+bool LibcurlHttpFetcher::GetProxyType(const string& proxy_str,
                                       curl_proxytype* out_type) {
-  if (base::StartsWith(
-          proxy, "socks5://", base::CompareCase::INSENSITIVE_ASCII) ||
-      base::StartsWith(
-          proxy, "socks://", base::CompareCase::INSENSITIVE_ASCII)) {
+  auto proxy = ToLower(proxy_str);
+  if (android::base::StartsWith(proxy, "socks5://") ||
+      android::base::StartsWith(proxy, "socks://")) {
     *out_type = CURLPROXY_SOCKS5_HOSTNAME;
     return true;
   }
-  if (base::StartsWith(
-          proxy, "socks4://", base::CompareCase::INSENSITIVE_ASCII)) {
+  if (android::base::StartsWith(proxy, "socks4://")) {
     *out_type = CURLPROXY_SOCKS4A;
     return true;
   }
-  if (base::StartsWith(
-          proxy, "http://", base::CompareCase::INSENSITIVE_ASCII) ||
-      base::StartsWith(
-          proxy, "https://", base::CompareCase::INSENSITIVE_ASCII)) {
+  if (android::base::StartsWith(proxy, "http://") ||
+      android::base::StartsWith(proxy, "https://")) {
     *out_type = CURLPROXY_HTTP;
     return true;
   }
-  if (base::StartsWith(proxy, kNoProxy, base::CompareCase::INSENSITIVE_ASCII)) {
+  if (android::base::StartsWith(proxy, kNoProxy)) {
     // known failure case. don't log.
     return false;
   }
@@ -196,7 +191,7 @@ void LibcurlHttpFetcher::ResumeTransfer(const string& url) {
   if (post_data_set_) {
     // Set the Content-Type HTTP header, if one was specifically set.
     if (post_content_type_ != kHttpContentTypeUnspecified) {
-      const string content_type_attr = base::StringPrintf(
+      const string content_type_attr = android::base::StringPrintf(
           "Content-Type: %s", GetHttpContentTypeString(post_content_type_));
       curl_http_headers_ =
           curl_slist_append(curl_http_headers_, content_type_attr.c_str());
@@ -222,7 +217,7 @@ void LibcurlHttpFetcher::ResumeTransfer(const string& url) {
     }
 
     // Create a string representation of the desired range.
-    string range_str = base::StringPrintf(
+    string range_str = android::base::StringPrintf(
         "%" PRIu64 "-", static_cast<uint64_t>(resume_offset_));
     if (end_offset)
       range_str += std::to_string(end_offset);
@@ -259,15 +254,12 @@ void LibcurlHttpFetcher::ResumeTransfer(const string& url) {
   // Lock down the appropriate curl options for HTTP or HTTPS depending on
   // the url.
   if (hardware_->IsOfficialBuild()) {
-    if (base::StartsWith(
-            url_, "http://", base::CompareCase::INSENSITIVE_ASCII)) {
+    if (android::base::StartsWith(ToLower(url_), "http://")) {
       SetCurlOptionsForHttp();
-    } else if (base::StartsWith(
-                   url_, "https://", base::CompareCase::INSENSITIVE_ASCII)) {
+    } else if (android::base::StartsWith(ToLower(url_), "https://")) {
       SetCurlOptionsForHttps();
 #ifdef __ANDROID__
-    } else if (base::StartsWith(
-                   url_, "file://", base::CompareCase::INSENSITIVE_ASCII)) {
+    } else if (android::base::StartsWith(ToLower(url_), "file://")) {
       SetCurlOptionsForFile();
 #endif  // __ANDROID__
     } else {
@@ -379,7 +371,7 @@ void LibcurlHttpFetcher::SetHeader(const string& header_name,
     header_line = header_name + ":";
   TEST_AND_RETURN(header_line.find('\n') == string::npos);
   TEST_AND_RETURN(header_name.find(':') == string::npos);
-  extra_headers_[base::ToLowerASCII(header_name)] = header_line;
+  extra_headers_[ToLower(header_name)] = header_line;
 }
 
 // Inputs: header_name, header_value
@@ -397,7 +389,7 @@ bool LibcurlHttpFetcher::GetHeader(const string& header_name,
   // Initially clear |header_value| to handle both success and failures without
   // leaving |header_value| in a unclear state.
   header_value->clear();
-  auto header_key = base::ToLowerASCII(header_name);
+  auto header_key = ToLower(header_name);
   auto header_line_itr = extra_headers_.find(header_key);
   // If the |header_name| was never set, indicate so by returning false.
   if (header_line_itr == extra_headers_.end())
@@ -683,7 +675,7 @@ void LibcurlHttpFetcher::SetupMessageLoopSources() {
 
   // We should iterate through all file descriptors up to libcurl's fd_max or
   // the highest one we're tracking, whichever is larger.
-  for (size_t t = 0; t < base::size(fd_controller_maps_); ++t) {
+  for (size_t t = 0; t < std::size(fd_controller_maps_); ++t) {
     if (!fd_controller_maps_[t].empty())
       fd_max = max(fd_max, fd_controller_maps_[t].rbegin()->first);
   }
@@ -701,7 +693,7 @@ void LibcurlHttpFetcher::SetupMessageLoopSources() {
         is_exc || (FD_ISSET(fd, &fd_write) != 0)  // track 1 -- write
     };
 
-    for (size_t t = 0; t < base::size(fd_controller_maps_); ++t) {
+    for (size_t t = 0; t < std::size(fd_controller_maps_); ++t) {
       bool tracked =
           fd_controller_maps_[t].find(fd) != fd_controller_maps_[t].end();
 
@@ -782,7 +774,7 @@ void LibcurlHttpFetcher::CleanUp() {
   MessageLoop::current()->CancelTask(timeout_id_);
   timeout_id_ = MessageLoop::kTaskIdNull;
 
-  for (size_t t = 0; t < base::size(fd_controller_maps_); ++t) {
+  for (size_t t = 0; t < std::size(fd_controller_maps_); ++t) {
     fd_controller_maps_[t].clear();
   }
 
@@ -809,7 +801,7 @@ void LibcurlHttpFetcher::CleanUp() {
 
 void LibcurlHttpFetcher::GetHttpResponseCode() {
   long http_response_code = 0;  // NOLINT(runtime/int) - curl needs long.
-  if (base::StartsWith(url_, "file://", base::CompareCase::INSENSITIVE_ASCII)) {
+  if (android::base::StartsWith(ToLower(url_), "file://")) {
     // Fake out a valid response code for file:// URLs.
     http_response_code_ = 299;
   } else if (curl_easy_getinfo(curl_handle_,

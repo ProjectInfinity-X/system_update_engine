@@ -20,8 +20,7 @@
 
 #include <base/logging.h>
 #include <base/strings/string_number_conversions.h>
-#include <base/strings/string_util.h>
-#include <base/strings/stringprintf.h>
+#include <android-base/stringprintf.h>
 #include <curl/curl.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
@@ -160,10 +159,11 @@ bool CertificateChecker::CheckCertificateChange(int preverify_ok,
   // prefs.
   string digest_string = base::HexEncode(digest, digest_length);
 
-  string storage_key = base::StringPrintf("%s-%d-%d",
-                                          kPrefsUpdateServerCertificate,
-                                          static_cast<int>(server_to_check),
-                                          depth);
+  string storage_key =
+      android::base::StringPrintf("%s-%d-%d",
+                                  kPrefsUpdateServerCertificate,
+                                  static_cast<int>(server_to_check),
+                                  depth);
   string stored_digest;
   // If there's no stored certificate, we just store the current one and return.
   if (!prefs_->GetString(storage_key, &stored_digest)) {

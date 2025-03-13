@@ -19,10 +19,10 @@
 #include <algorithm>
 #include <map>
 
+#include <android-base/parseint.h>
 #include <base/files/file_util.h>
 #include <base/logging.h>
 #include <base/memory/ptr_util.h>
-#include <base/strings/string_number_conversions.h>
 #include <base/strings/string_split.h>
 
 #include "update_engine/common/utils.h"
@@ -98,11 +98,14 @@ bool MapfileFilesystem::GetFiles(vector<File>* files) const {
           line.substr(delim + 1, last_delim - (delim + 1)).as_string();
       size_t dash = blocks.find('-', 0);
       uint64_t block_start, block_end;
-      if (dash == string::npos && base::StringToUint64(blocks, &block_start)) {
+      if (dash == string::npos &&
+          android::base::ParseUint<uint64_t>(blocks, &block_start)) {
         mapped_file.extents.push_back(ExtentForRange(block_start, 1));
       } else if (dash != string::npos &&
-                 base::StringToUint64(blocks.substr(0, dash), &block_start) &&
-                 base::StringToUint64(blocks.substr(dash + 1), &block_end)) {
+                 android::base::ParseUint<uint64_t>(blocks.substr(0, dash),
+                                                    &block_start) &&
+                 android::base::ParseUint<uint64_t>(blocks.substr(dash + 1),
+                                                    &block_end)) {
         if (block_end < block_start) {
           LOG(ERROR) << "End block " << block_end
                      << " is smaller than start block " << block_start

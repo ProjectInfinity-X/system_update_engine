@@ -80,6 +80,9 @@ cc_defaults {
             cflags: [
                 "-DUSE_FEC=1",
             ],
+            shared_libs: [
+                "libbase",
+            ],
         },
         host: {
             cflags: [
@@ -182,7 +185,7 @@ python_library_host {
 // The payload application component and common dependencies.
 cc_defaults {
     name: "libpayload_consumer_exports_defaults",
-    defaults: ["update_metadata-protos_exports",],
+    defaults: ["update_metadata-protos_exports"],
 
     static_libs: [
         "libxz",
@@ -223,17 +226,17 @@ cc_defaults {
 cc_defaults {
     name: "libpayload_consumer_exports",
     defaults: [
-        "libpayload_consumer_exports_defaults"
+        "libpayload_consumer_exports_defaults",
     ],
-    static_libs: ["update_metadata-protos",],
+    static_libs: ["update_metadata-protos"],
 }
 
 cc_defaults {
     name: "libpayload_consumer_exports_proto-full",
     defaults: [
-        "libpayload_consumer_exports_defaults"
+        "libpayload_consumer_exports_defaults",
     ],
-    static_libs: ["update_metadata-protos-full",],
+    static_libs: ["update_metadata-protos-full"],
 }
 
 cc_defaults {
@@ -318,7 +321,7 @@ cc_library_static {
     export_generated_headers: ["statslog_ue.h"],
     shared_libs: [
         "libstatssocket",
-    ]
+    ],
 }
 
 genrule {
@@ -344,7 +347,7 @@ genrule {
 // A BootControl class implementation using Android's HIDL boot_control HAL.
 cc_defaults {
     name: "libupdate_engine_boot_control_exports_defaults",
-    defaults: ["update_metadata-protos_exports",],
+    defaults: ["update_metadata-protos_exports"],
 
     static_libs: [
         "libcutils",
@@ -377,7 +380,7 @@ cc_defaults {
             exclude_static_libs: [
                 "libfs_mgr_binder",
                 "libsnapshot_static",
-                "libstatslog_ue"
+                "libstatslog_ue",
             ],
         },
     },
@@ -391,7 +394,7 @@ cc_defaults {
     static_libs: [
         "libpayload_consumer",
         "update_metadata-protos",
-    ]
+    ],
 }
 
 cc_defaults {
@@ -402,7 +405,7 @@ cc_defaults {
     static_libs: [
         "libpayload_consumer_proto-full",
         "update_metadata-protos-full",
-    ]
+    ],
 }
 
 cc_defaults {
@@ -475,7 +478,7 @@ cc_defaults {
         "libbrillo-binder",
         "libcurl",
         "libcutils",
-        "libupdate_engine_stable-V2-cpp",
+        "libupdate_engine_stable-V3-cpp",
         "liblog",
         "libssl",
         "libstatssocket",
@@ -510,6 +513,29 @@ cc_defaults {
         "libpayload_consumer_proto-full",
         "libupdate_engine_boot_control_proto-full",
     ],
+}
+
+aidl_interface {
+    name: "libupdate_engine_aidl_interface",
+    srcs: [
+        ":libupdate_engine_aidl",
+    ],
+    backend: {
+        cpp: {
+            enabled: false,
+        },
+        java: {
+            enabled: false,
+        },
+        ndk: {
+            enabled: false,
+        },
+        rust: {
+            enabled: true,
+        },
+    },
+    frozen: false,
+    unstable: true,
 }
 
 cc_defaults {
@@ -548,7 +574,7 @@ cc_library_static {
     defaults: [
         "libupdate_engine_android_defaults",
         "libupdate_engine_android_exports",
-    ]
+    ],
 }
 
 cc_library_static {
@@ -556,7 +582,7 @@ cc_library_static {
     defaults: [
         "libupdate_engine_android_defaults",
         "libupdate_engine_android_exports_proto-full",
-    ]
+    ],
 }
 
 // update_engine (type: executable)
@@ -578,7 +604,10 @@ cc_binary {
         "otacerts",
     ],
 
-    srcs: ["main.cc", "aosp/metrics_reporter_android.cc"],
+    srcs: [
+        "main.cc",
+        "aosp/metrics_reporter_android.cc",
+    ],
     init_rc: ["update_engine.rc"],
 }
 
@@ -604,7 +633,7 @@ cc_binary {
 
     exclude_static_libs: [
         "libstatslog_ue",
-        "libupdate_engine_boot_control"
+        "libupdate_engine_boot_control",
     ],
 
     exclude_shared_libs: [
@@ -783,7 +812,7 @@ cc_library_static {
     name: "libcow_size_estimator",
     defaults: [
         "ue_defaults",
-        "update_metadata-protos_exports"
+        "update_metadata-protos_exports",
     ],
     host_supported: true,
     recovery_available: true,
@@ -815,7 +844,10 @@ cc_defaults {
 cc_library_static {
     name: "liblz4diff",
     host_supported: true,
-    defaults: ["ue_defaults", "liblz4diff_defaults"],
+    defaults: [
+        "ue_defaults",
+        "liblz4diff_defaults",
+    ],
     srcs: [
         "lz4diff/lz4diff.cc",
         "lz4diff/lz4diff_compress.cc",
@@ -1004,8 +1036,8 @@ genrule {
 genrule {
     name: "ue_unittest_erofs_imgs",
     cmd: "$(in) $(location mkfs.erofs) $(location gen/erofs_empty.img) && " +
-         "$(in) $(location mkfs.erofs) $(location gen/erofs.img) $(location delta_generator) && " +
-         "$(in) $(location mkfs.erofs) $(location gen/erofs_new.img) $(location delta_generator) lz4hc,7",
+        "$(in) $(location mkfs.erofs) $(location gen/erofs.img) $(location delta_generator) && " +
+        "$(in) $(location mkfs.erofs) $(location gen/erofs_new.img) $(location delta_generator) lz4hc,7",
     srcs: ["sample_images/generate_test_erofs_images.sh"],
     out: [
         "gen/erofs.img",
@@ -1307,7 +1339,7 @@ cc_library_headers {
         darwin: {
             enabled: false,
         },
-    }
+    },
 }
 
 cc_binary_host {
@@ -1419,7 +1451,7 @@ cc_fuzz {
         cc: [
             "elsk@google.com",
             "zhangkelvin@google.com",
-        ]
+        ],
     },
 }
 
